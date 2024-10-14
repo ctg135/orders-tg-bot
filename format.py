@@ -49,6 +49,26 @@ def get_menu_category_keyboard():
     result.add(cat_3, cat_4)
     return result
 
+def get_menu_id_category_keyboard(menu: db.Food) -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура с id записи
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    for item in menu:
+        result.add(types.KeyboardButton(text=item.id))
+    return result
+
+def get_ok_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура с надписью Ок
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    ok = types.KeyboardButton(text='Ок')
+    result.add(ok)
+    return result
+
+
+
 def get_hello_admin_text() -> str:
     '''
     Текст для справки администратору
@@ -76,4 +96,23 @@ def format_menu_list(menu: db.Food) -> str:
         result += f' {food.name} <i>{food.price} руб.</i>\n'
     return result
 
- 
+def format_menu_list_id(menu: db.Food) -> str:
+    '''
+    Возвращает отформатированный список меню с id (для редактирования и удаления)
+    '''
+    result = ''
+    last_category = 0
+    for food in menu:
+        if food.category != last_category:
+            last_category = food.category
+            match last_category:
+                case 1:
+                    result += f'\n<b>{category_1}</b>\n'
+                case 2:
+                    result += f'\n<b>{category_2}</b>\n'
+                case 3:
+                    result += f'\n<b>{category_3}</b>\n'
+                case 4:
+                    result += f'\n<b>{category_4}</b>\n'
+        result += f'{food.id}. {food.name} <i>{food.price} руб.</i>\n'
+    return result
