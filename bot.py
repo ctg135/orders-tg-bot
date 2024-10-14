@@ -10,6 +10,14 @@ admin = config.ADMIN_CHAT_ID
 
 db.check_database()
 
+@bot.message_handler(commands=['start', 'старт', 'начало'])
+def start_admin(message):
+    if message.chat.id not in admin:
+        return
+    bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(), 
+                     reply_markup=format.get_hello_admin_keyboard())
+
 @bot.message_handler(commands=['menu', 'меню'])
 def list_menu(message):
     '''
@@ -52,12 +60,21 @@ def menu_add_item_step2(message):
     '''
     Выбор названия
     '''
+
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        return
+
     global add_item
     match message.text:
         case format.category_1: add_item.category = 1
         case format.category_2: add_item.category = 2
         case format.category_3: add_item.category = 3
         case format.category_4: add_item.category = 4
+        case _: 
+            bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
+            return
+
     msg = bot.send_message(message.chat.id, 'Введите название', reply_markup=types.ReplyKeyboardRemove())
     bot.register_next_step_handler(msg, menu_add_item_step3)
 
@@ -65,6 +82,11 @@ def menu_add_item_step3(message):
     '''
     Выбор цены
     '''
+
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        return
+    
     global add_item
     add_item.name = message.text
     msg = bot.send_message(message.chat.id, 'Введите цену', reply_markup=types.ReplyKeyboardRemove())
@@ -74,10 +96,18 @@ def menu_add_item_step4(message):
     '''
     Добавление в меню
     '''
+
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        return
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
+        return
+    
     global add_item
     add_item.price = message.text
     db.menu_add_item(add_item)
-    bot.send_message(message.chat.id, 'Готово!', reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
 
 
 

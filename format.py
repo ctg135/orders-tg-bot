@@ -7,6 +7,15 @@ category_2 = '🍝 Вторые блюда'
 category_3 = '🥗 Салаты'
 category_4 = '🧃 Напитки'
 
+def get_hello_admin_keyboard():
+    '''
+    Клавиатура приветствия с основными действиями бота
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu = types.KeyboardButton(text='/menu')
+    result.add(menu)
+    return result
+
 def get_menu_add_keyboard():
     '''
     Клавиатура для пустого меню
@@ -40,6 +49,12 @@ def get_menu_category_keyboard():
     result.add(cat_3, cat_4)
     return result
 
+def get_hello_admin_text() -> str:
+    '''
+    Текст для справки администратору
+    '''
+    return 'Для просмотра меню нажмите /menu'
+
 def format_menu_list(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню
@@ -51,14 +66,14 @@ def format_menu_list(menu: db.Food) -> str:
             last_category = food.category
             match last_category:
                 case 1:
-                    result += f'\n<i>{category_1}</i>\n'
+                    result += f'\n<b>{category_1}</b>\n'
                 case 2:
-                    result += f'\n<i>{category_2}</i>\n'
+                    result += f'\n<b>{category_2}</b>\n'
                 case 3:
-                    result += f'\n<i>{category_3}</i>\n'
+                    result += f'\n<b>{category_3}</b>\n'
                 case 4:
-                    result += f'\n<i>{category_4}</i>\n'
-        result += f' {food.name} {food.price} руб.\n'
+                    result += f'\n<b>{category_4}</b>\n'
+        result += f' {food.name} <i>{food.price} руб.</i>\n'
     return result
 
  
