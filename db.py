@@ -27,7 +27,7 @@ def check_database() -> None:
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
                 (`id` INTEGER, `user_id` TEXT, `date` date, `telephone` TEXT, `order_list` TEXT)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
-                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
+                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT UNIQUE, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
     con.commit()
 
 def menu_get_list_nice() -> list:
@@ -93,10 +93,32 @@ def menu_get_list_category(category: int) -> list:
         result.append(f)
     return result
 
+def menu_get_list_category_nice(category: int) -> list:
+    '''
+    Получает список блюд из меню по одной категории, без скрытых
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT * FROM menu 
+                    WHERE category = {category} AND visibility = 1
+                    ORDER BY `id` ASC;''')
+    rows = cur.fetchall()
+    result = []
+    for row in rows:
+        f = Food()
+        f.id = row[0]
+        f.category = row[1]
+        f.name = row[2]
+        f.price = row[3]
+        f.visibility = row[4]
+        result.append(f)
+    return result
+
 
 def menu_add_item(i: Food) -> None:
     '''
     Добавляет запись с новым блюдом
+    # TODO добавить проверку на совпадение имени
     '''
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()

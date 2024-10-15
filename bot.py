@@ -8,6 +8,7 @@ import format
 
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
 admin = config.ADMIN_CHAT_ID
+basket = {}
 
 db.check_database()
 
@@ -52,12 +53,17 @@ def get_all_mesasge(message):
     Текстовые сообщения
     '''
     if message.chat.id not in admin:
-        if message.text == format.button_init_order:
-            start_order(message)
-        # Приветствие пользователя
-        else: bot.send_message(message.chat.id, 
-                     format.get_hello_client_text(), 
-                     reply_markup=format.get_hello_client_keyboard())
+        match message.text:
+            case format.button_init_order:
+                start_order(message)
+            # Приветствие пользователя
+            case _: 
+                bot.send_message(message.chat.id, 
+                    format.get_hello_client_text(), 
+                    reply_markup=format.get_hello_client_keyboard())
+                if datetime.datetime.now().time().hour >= 11:
+                    bot.send_message(message.chat.id, 
+                        format.get_hello_client_late_text())
     else:
         # Обрабтка сообщений главного меню администратора
         match message.text:
@@ -337,7 +343,43 @@ def start_order(message):
     '''
     Инициация создания заказа
     '''
-    bot.send_message(message.chat.id, 'Что выберете?', reply_markup=format.get_order_start_keyboard())
+    msg = bot.send_message(message.chat.id, 'Что выберете?', reply_markup=format.get_order_start_keyboard())
+    bot.register_next_step_handler(msg, start_order_step2)
+
+def start_order_step2(message):
+    '''
+    Обработка кнопок меню пользователя
+    '''
+    match message.text:
+        case format.button_back:
+            hello_message_command(message)
+            # TODO Сброс корзины
+        case format.button_category_1:
+            order_food_simple(message, 1)
+        case format.button_category_2:
+            pass
+        case format.button_category_3:
+            order_food_simple(message, 4)
+        case format.button_category_4:
+            order_food_simple(message, 5)
+        case format.button_basket:
+            pass
+        case format.button_make_order:
+            pass
+        case _: 
+            msg = bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+            bot.register_next_step_handler(msg, start_order_step2)
+
+def order_food_simple(message, category):
+    '''
+    Функция для добавления в заказ простых блюд
+    Выгружает выбранную категории и показывает выбор пользователю
+    '''
+    menu = db.menu_get_list_category_nice(category)
+    # TODO: сделать клавиатуру для названий позиций
+    bot.send_message(message.chat.id, format.format_menu_list_nice(menu))
+
+
 
 
 bot.infinity_polling()
