@@ -44,7 +44,7 @@ def list_menu(message):
     if len(menu) == 0:
         bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
     else:
-        bot.send_message(message.chat.id, format.format_menu_list(menu), reply_markup=format.get_menu_keyboard())
+        bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_keyboard())
 
 @bot.message_handler(content_types=['text'])
 def get_all_mesasge(message):
@@ -59,10 +59,25 @@ def get_all_mesasge(message):
                      format.get_hello_client_text(), 
                      reply_markup=format.get_hello_client_keyboard())
     else:
-        # Приветствие администратора
-        bot.send_message(message.chat.id, 
-                     format.get_hello_admin_text(), 
-                     reply_markup=format.get_hello_admin_keyboard())
+        # Обрабтка сообщений главного меню администратора
+        match message.text:
+            case format.button_menu_full:
+                menu = db.menu_get_list()
+                if len(menu) == 0:
+                    bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
+                else:
+                    bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_keyboard())
+            case format.button_menu_nice:
+                menu = db.menu_get_list_nice()
+                if len(menu) == 0:
+                    bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
+                else:
+                    bot.send_message(message.chat.id, format.format_menu_list_nice(menu), reply_markup=format.get_menu_keyboard())
+            case _:
+            # Приветствие администратора
+                bot.send_message(message.chat.id, 
+                                format.get_hello_admin_text(), 
+                                reply_markup=format.get_hello_admin_keyboard())
 
 @bot.callback_query_handler(func=lambda call: True)
 def get_callback(callback):
@@ -79,7 +94,6 @@ def get_callback(callback):
 
 # Секция добавления элемента в меню
 
-add_item = db.Food()
 def menu_add_item_step1(callback):
     '''
     Определение категории для добавления
@@ -96,7 +110,7 @@ def menu_add_item_step2(message):
         bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
         return
 
-    global add_item
+    add_item = db.Food()
     match message.text:
         case format.category_1: add_item.category = 1
         case format.category_2: add_item.category = 2
@@ -113,9 +127,9 @@ def menu_add_item_step2(message):
             return
 
     msg = bot.send_message(message.chat.id, 'Введите название', reply_markup=types.ReplyKeyboardRemove())
-    bot.register_next_step_handler(msg, menu_add_item_step3)
+    bot.register_next_step_handler(msg, menu_add_item_step3, add_item)
 
-def menu_add_item_step3(message):
+def menu_add_item_step3(message, add_item):
     '''
     Выбор цены
     '''
@@ -124,12 +138,11 @@ def menu_add_item_step3(message):
         bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
         return
     
-    global add_item
     add_item.name = message.text
     msg = bot.send_message(message.chat.id, 'Введите цену', reply_markup=types.ReplyKeyboardRemove())
-    bot.register_next_step_handler(msg, menu_add_item_step4)
+    bot.register_next_step_handler(msg, menu_add_item_step4, add_item)
 
-def menu_add_item_step4(message):
+def menu_add_item_step4(message, add_item):
     '''
     Добавление в меню
     '''
@@ -141,14 +154,12 @@ def menu_add_item_step4(message):
         bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
         return
     
-    global add_item
     add_item.price = message.text
     db.menu_add_item(add_item)
     bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
 
 # Секция редактирования элемента в меню
 
-edit_item = db.Food()
 def menu_edit_item_step1(callback):
     '''
     Предложение категории
@@ -192,55 +203,73 @@ def menu_edit_item_step2(message):
 
 def menu_edit_item_step3(message, menu):
     '''
-    Выбор блюда и предложение нового названия
+    Выбор блюда и предложение видимости
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
         return
     
-    food = ''
+    edit_item = None
     for item in menu:
         if str(item.id) == message.text:
-            food = item
+            edit_item = item
 
-    if food == '': 
+    if edit_item == None: 
         bot.send_message(message.chat.id, 'Ошибка: укажите корректный номер', reply_markup=format.get_hello_admin_keyboard())
         return
     
-    
-    msg = bot.send_message(message.chat.id, 'Введите новое название или <i>Ок</i> для продолжения', reply_markup=format.get_ok_keyboard())
-    bot.register_next_step_handler(msg, menu_edit_item_step4, food)
+    msg = bot.send_message(message.chat.id, 'Укажите видимость в меню', reply_markup=format.get_menu_visibility_edit_keyobard())
+    bot.register_next_step_handler(msg, menu_edit_item_step34, edit_item)
 
-def menu_edit_item_step4(message, food):
+def menu_edit_item_step34(message, edit_item):
     '''
-    Установка нового название и предложение новой цены
+    Установка видимости и предложение нового названия
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
         return
-    global edit_item
-    if message.text == 'Ок': edit_item.name = food.name
-    else: edit_item.name = message.text
+    
+    match message.text:
+        case format.button_ok: pass
+        case format.button_menu_hidden: edit_item.visibility = 0
+        case format.button_menu_visible: edit_item.visibility = 1
+        case _: 
+            bot.send_message(message.chat.id, 'Ошибка: неизвестный статус', reply_markup=format.get_hello_admin_keyboard())
+            return
+
+    msg = bot.send_message(message.chat.id, 'Введите новое название или <i>Ок</i> для продолжения', reply_markup=format.get_ok_keyboard())
+    bot.register_next_step_handler(msg, menu_edit_item_step4, edit_item)
+
+def menu_edit_item_step4(message, edit_item):
+    '''
+    Установка нового названия и предложение новой цены
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        return
+    
+    if not message.text == 'Ок':
+        edit_item.name = message.text
 
     msg = bot.send_message(message.chat.id, 'Введите новую цену или <i>Ок</i> для продолжения', reply_markup=format.get_ok_keyboard())
-    bot.register_next_step_handler(msg, menu_edit_item_step5, food)
+    bot.register_next_step_handler(msg, menu_edit_item_step5, edit_item)
     
-def menu_edit_item_step5(message, food):
+def menu_edit_item_step5(message, edit_item):
     '''
     Установка новых значений
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
         return
-    global edit_item
+    
     if message.text == 'Ок':
-        edit_item.price = food.price
+        pass
     elif not message.text.isdigit():
         bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
         return
     else: edit_item.price = message.text
 
-    db.menu_edit_item(food.id, edit_item)
+    db.menu_edit_item(edit_item.id, edit_item)
     bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
 
 # Секция удаления элемента в меню

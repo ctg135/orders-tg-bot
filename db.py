@@ -15,6 +15,7 @@ class Food:
     category = 0
     name = ''
     price = 0
+    visibility = 0
 
 
 def check_database() -> None:
@@ -26,19 +27,20 @@ def check_database() -> None:
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
                 (`id` INTEGER, `user_id` TEXT, `date` date, `telephone` TEXT, `order_list` TEXT)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
-                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER UNIQUE, `name` INTEGER UNIQUE, `price` INTEGER UNIQUE)''')
+                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
     con.commit()
 
-def menu_get_list() -> list:
+def menu_get_list_nice() -> list:
     '''
-    Выгружает из базы данных список всех блюд
+    Выгружает из базы данных список всех блюд, без скрытых
     '''
     result = []
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
-    cur.execute('''SELECT id, category, name, price 
+    cur.execute('''SELECT id, category, name, price
                 FROM menu 
-                ORDER BY menu.category, menu.id ASC;''')
+                WHERE menu.visibility = 1
+                ORDER BY category, id ASC;''')
     rows = cur.fetchall()
     for row in rows:
         f = Food()
@@ -49,15 +51,26 @@ def menu_get_list() -> list:
         result.append(f)
     return result
 
-def menu_add_item(i: Food) -> None:
+def menu_get_list() -> list:
     '''
-    Добавляет запись с новым блюдом
+    Выгружает из базы данных список всех блюд
     '''
+    result = []
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
-    cur.execute(f'''INSERT INTO menu (category, name, price) 
-                VALUES ({i.category}, "{i.name}", {i.price})''')
-    con.commit()
+    cur.execute('''SELECT id, category, name, price, visibility
+                FROM menu 
+                ORDER BY menu.category, menu.id ASC;''')
+    rows = cur.fetchall()
+    for row in rows:
+        f = Food()
+        f.id = row[0]
+        f.category = row[1]
+        f.name = row[2]
+        f.price = row[3]
+        f.visibility = row[4]
+        result.append(f)
+    return result
 
 def menu_get_list_category(category: int) -> list:
     '''
@@ -76,8 +89,20 @@ def menu_get_list_category(category: int) -> list:
         f.category = row[1]
         f.name = row[2]
         f.price = row[3]
+        f.visibility = row[4]
         result.append(f)
     return result
+
+
+def menu_add_item(i: Food) -> None:
+    '''
+    Добавляет запись с новым блюдом
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''INSERT INTO menu (category, name, price) 
+                VALUES ({i.category}, "{i.name}", {i.price})''')
+    con.commit()
 
 def menu_edit_item(id: int, new: Food) -> None:
     '''
@@ -86,7 +111,7 @@ def menu_edit_item(id: int, new: Food) -> None:
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
     cur.execute(f'''UPDATE menu
-                SET name = '{new.name}', price = {new.price}
+                SET name = '{new.name}', price = {new.price}, visibility = {new.visibility}
                 WHERE id = {id};''')
     con.commit()
 

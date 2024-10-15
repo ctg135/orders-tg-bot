@@ -9,10 +9,17 @@ category_3 = '🍖 Мясное'
 category_4 = '🥗 Салаты'
 category_5 = '🧃 Напитки'
 
+button_ok = 'Ок'
+button_back = '↩️ Назад'
+
+button_menu_nice = 'Меню дня'
+button_menu_full = 'Полный перечень'
+button_menu_hidden = 'Скрыть'
+button_menu_visible = 'Указать'
+
 button_init_order = '📖 Сделать заказ'
 button_make_order = '✅ Заказ собран'
 button_basket = 'Корзина'
-button_back = '↩️ Назад'
 button_category_1 = '🍲 Первые блюда'
 button_category_2 = '🍝 Вторые блюда'
 button_category_3 = '🥗 Салаты'
@@ -23,8 +30,9 @@ def get_hello_admin_keyboard() -> types.InlineKeyboardMarkup:
     Клавиатура приветствия с основными действиями бота
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    menu = types.KeyboardButton(text='/menu')
-    result.add(menu)
+    menu_nice = types.KeyboardButton(text=button_menu_nice)
+    menu_full = types.KeyboardButton(text=button_menu_full)
+    result.add(menu_nice, menu_full)
     return result
 
 def get_hello_client_keyboard() -> types.InlineKeyboardMarkup:
@@ -81,6 +89,18 @@ def get_menu_id_category_keyboard(menu: db.Food) -> types.InlineKeyboardMarkup:
         result.add(types.KeyboardButton(text=item.id))
     return result
 
+def get_menu_visibility_edit_keyobard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для получения видимости пункта
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    hidden = types.KeyboardButton(text=button_menu_hidden)
+    visible = types.KeyboardButton(text=button_menu_visible)
+    ok = types.KeyboardButton(text=button_ok)
+    result.add(visible, hidden)
+    result.add(ok)
+    return result
+
 def get_ok_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура с надписью Ок
@@ -113,7 +133,10 @@ def get_hello_admin_text() -> str:
     '''
     Текст для справки администратору
     '''
-    return 'Для просмотра меню нажмите /menu'
+    return f'''
+<code>{button_menu_nice}</code> - список меню, как он отображается клиенту
+<code>{button_menu_full}</code> - полное меню
+'''
 
 def get_hello_client_text() -> str:
     '''
@@ -129,7 +152,30 @@ def get_hello_client_late_text() -> str:
     '''
     return 'Хотите оформить доставку на завтра?'
 
-def format_menu_list(menu: db.Food) -> str:
+def format_menu_list_full(menu: db.Food) -> str:
+    '''
+    Возвращает отформатированный список меню, со знаком скрытости
+    '''
+    result = ''
+    last_category = 0
+    for food in menu:
+        if food.category != last_category:
+            last_category = food.category
+            match last_category:
+                case 1:
+                    result += f'\n<b>{category_1}</b>\n'
+                case 2:
+                    result += f'\n<b>{category_2}</b>\n'
+                case 3:
+                    result += f'\n<b>{category_3}</b>\n'
+                case 4:
+                    result += f'\n<b>{category_4}</b>\n'
+                case 5:
+                    result += f'\n<b>{category_5}</b>\n'
+        result += f'  {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
+    return result
+
+def format_menu_list_nice(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню
     '''
@@ -172,5 +218,5 @@ def format_menu_list_id(menu: db.Food) -> str:
                     result += f'\n<b>{category_4}</b>\n'
                 case 5:
                     result += f'\n<b>{category_5}</b>\n'
-        result += f'{food.id}. {food.name} <i>{food.price} руб.</i>\n'
+        result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
     return result
