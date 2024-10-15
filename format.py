@@ -8,9 +8,12 @@ category_2 = '🍝 Вторые блюда'
 category_3 = '🥗 Салаты'
 category_4 = '🧃 Напитки'
 
-button_make_order = '📖 Сделать заказ'
+button_init_order = '📖 Сделать заказ'
+button_make_order = '✅ Заказ собран'
+button_basket = 'Корзина'
+button_back = '↩️ Назад'
 
-def get_hello_admin_keyboard():
+def get_hello_admin_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура приветствия с основными действиями бота
     '''
@@ -19,16 +22,16 @@ def get_hello_admin_keyboard():
     result.add(menu)
     return result
 
-def get_hello_client_keyboard():
+def get_hello_client_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура приветствия клиента
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    menu = types.KeyboardButton(text=button_make_order)
+    menu = types.KeyboardButton(text=button_init_order)
     result.add(menu)
     return result
 
-def get_menu_add_keyboard():
+def get_menu_add_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для пустого меню
     '''
@@ -48,7 +51,7 @@ def get_menu_keyboard():
     result.add(add, edit, delete)
     return result
 
-def get_menu_category_keyboard():
+def get_menu_category_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для получения категории блюда
     '''
@@ -79,6 +82,23 @@ def get_ok_keyboard() -> types.InlineKeyboardMarkup:
     result.add(ok)
     return result
 
+def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Основная клавиатура для сборки заказа
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    basket = types.KeyboardButton(text=button_basket)
+    make_order = types.KeyboardButton(text=button_make_order)
+    back = types.KeyboardButton(text=button_back)
+    cat_1 = types.KeyboardButton(text=category_1)
+    cat_2 = types.KeyboardButton(text=category_2)
+    cat_3 = types.KeyboardButton(text=category_3)
+    cat_4 = types.KeyboardButton(text=category_4)
+    result.add(basket, make_order)
+    result.add(cat_1, cat_2)
+    result.add(cat_3, cat_4)
+    result.add(back)
+    return result
 
 
 def get_hello_admin_text() -> str:

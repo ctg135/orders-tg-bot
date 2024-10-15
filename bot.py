@@ -32,13 +32,15 @@ def hello_message_command(message):
                      reply_markup=format.get_hello_admin_keyboard())
         
 @bot.message_handler(content_types=['text'])
-def hello_message(message):
+def get_all_mesasge(message):
     '''
-    Сообщение приветствия
+    Текстовые сообщения
     '''
     if message.chat.id not in admin:
+        if message.text == format.button_init_order:
+            start_order(message)
         # Приветствие пользователя
-        bot.send_message(message.chat.id, 
+        else: bot.send_message(message.chat.id, 
                      format.get_hello_client_text(), 
                      reply_markup=format.get_hello_client_keyboard())
     else:
@@ -287,5 +289,14 @@ def menu_delete_item_step3(message, menu):
 
     db.menu_delete_item(food.id)
     bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+
+# Секция создания заказа
+
+def start_order(message):
+    '''
+    Инициация создания заказа
+    '''
+    bot.send_message(message.chat.id, 'Что выберете?', reply_markup=format.get_order_start_keyboard())
+
 
 bot.infinity_polling()
