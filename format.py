@@ -4,14 +4,19 @@ from telebot import types
 import db
 
 category_1 = '🍲 Первые блюда'
-category_2 = '🍝 Вторые блюда'
-category_3 = '🥗 Салаты'
-category_4 = '🧃 Напитки'
+category_2 = '🍝 Гарниры'
+category_3 = '🍖 Мясное'
+category_4 = '🥗 Салаты'
+category_5 = '🧃 Напитки'
 
 button_init_order = '📖 Сделать заказ'
 button_make_order = '✅ Заказ собран'
 button_basket = 'Корзина'
 button_back = '↩️ Назад'
+button_category_1 = '🍲 Первые блюда'
+button_category_2 = '🍝 Вторые блюда'
+button_category_3 = '🥗 Салаты'
+button_category_4 = '🧃 Напитки'
 
 def get_hello_admin_keyboard() -> types.InlineKeyboardMarkup:
     '''
@@ -60,8 +65,11 @@ def get_menu_category_keyboard() -> types.InlineKeyboardMarkup:
     cat_2 = types.KeyboardButton(text=category_2)
     cat_3 = types.KeyboardButton(text=category_3)
     cat_4 = types.KeyboardButton(text=category_4)
+    cat_5 = types.KeyboardButton(text=category_5)
+    back = types.KeyboardButton(text=button_back)
     result.add(cat_1, cat_2)
     result.add(cat_3, cat_4)
+    result.add(cat_5, back)
     return result
 
 def get_menu_id_category_keyboard(menu: db.Food) -> types.InlineKeyboardMarkup:
@@ -90,10 +98,10 @@ def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
     basket = types.KeyboardButton(text=button_basket)
     make_order = types.KeyboardButton(text=button_make_order)
     back = types.KeyboardButton(text=button_back)
-    cat_1 = types.KeyboardButton(text=category_1)
-    cat_2 = types.KeyboardButton(text=category_2)
-    cat_3 = types.KeyboardButton(text=category_3)
-    cat_4 = types.KeyboardButton(text=category_4)
+    cat_1 = types.KeyboardButton(text=button_category_1)
+    cat_2 = types.KeyboardButton(text=button_category_2)
+    cat_3 = types.KeyboardButton(text=button_category_3)
+    cat_4 = types.KeyboardButton(text=button_category_4)
     result.add(basket, make_order)
     result.add(cat_1, cat_2)
     result.add(cat_3, cat_4)
@@ -139,6 +147,8 @@ def format_menu_list(menu: db.Food) -> str:
                     result += f'\n<b>{category_3}</b>\n'
                 case 4:
                     result += f'\n<b>{category_4}</b>\n'
+                case 5:
+                    result += f'\n<b>{category_5}</b>\n'
         result += f' {food.name} <i>{food.price} руб.</i>\n'
     return result
 
@@ -160,5 +170,7 @@ def format_menu_list_id(menu: db.Food) -> str:
                     result += f'\n<b>{category_3}</b>\n'
                 case 4:
                     result += f'\n<b>{category_4}</b>\n'
+                case 5:
+                    result += f'\n<b>{category_5}</b>\n'
         result += f'{food.id}. {food.name} <i>{food.price} руб.</i>\n'
     return result

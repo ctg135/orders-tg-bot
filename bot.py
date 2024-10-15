@@ -30,7 +30,22 @@ def hello_message_command(message):
         bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
                      reply_markup=format.get_hello_admin_keyboard())
-        
+
+@bot.message_handler(commands=['menu', 'меню'])
+def list_menu(message):
+    '''
+    Выводит список меню администратору для редактирования
+    '''
+    if message.chat.id not in admin:
+        return
+    
+    menu = db.menu_get_list()
+
+    if len(menu) == 0:
+        bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
+    else:
+        bot.send_message(message.chat.id, format.format_menu_list(menu), reply_markup=format.get_menu_keyboard())
+
 @bot.message_handler(content_types=['text'])
 def get_all_mesasge(message):
     '''
@@ -48,21 +63,6 @@ def get_all_mesasge(message):
         bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
                      reply_markup=format.get_hello_admin_keyboard())
-
-@bot.message_handler(commands=['menu', 'меню'])
-def list_menu(message):
-    '''
-    Выводит список меню администратору для редактирования
-    '''
-    if message.chat.id not in admin:
-        return
-    
-    menu = db.menu_get_list()
-
-    if len(menu) == 0:
-        bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
-    else:
-        bot.send_message(message.chat.id, format.format_menu_list(menu), reply_markup=format.get_menu_keyboard())
 
 @bot.callback_query_handler(func=lambda call: True)
 def get_callback(callback):
@@ -102,6 +102,12 @@ def menu_add_item_step2(message):
         case format.category_2: add_item.category = 2
         case format.category_3: add_item.category = 3
         case format.category_4: add_item.category = 4
+        case format.category_5: add_item.category = 5
+        case format.button_back: 
+            bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(), 
+                     reply_markup=format.get_hello_admin_keyboard())
+            return
         case _: 
             bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
             return
@@ -164,6 +170,11 @@ def menu_edit_item_step2(message):
         case format.category_2: cat = 2
         case format.category_3: cat = 3
         case format.category_4: cat = 4
+        case format.category_5: cat = 5
+        case format.button_back: 
+            bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(), 
+                     reply_markup=format.get_hello_admin_keyboard())
         case _: 
             bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
             return
@@ -255,6 +266,7 @@ def menu_delete_item_step2(message):
         case format.category_2: cat = 2
         case format.category_3: cat = 3
         case format.category_4: cat = 4
+        case format.category_5: cat = 5
         case _: 
             bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
             return
