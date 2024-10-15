@@ -89,3 +89,12 @@ def menu_edit_item(id: int, new: Food) -> None:
                 SET name = '{new.name}', price = {new.price}
                 WHERE id = {id};''')
     con.commit()
+
+def menu_delete_item(id: int) -> None:
+    '''
+    Удаление элемента по id
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''DELETE FROM menu WHERE id = {id};''')
+    con.commit()
