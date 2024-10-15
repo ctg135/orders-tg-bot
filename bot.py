@@ -1,3 +1,4 @@
+import datetime
 import telebot
 from telebot import types
 
@@ -11,13 +12,38 @@ admin = config.ADMIN_CHAT_ID
 db.check_database()
 
 @bot.message_handler(commands=['start', 'старт', 'начало'])
-def start_admin(message):
+def hello_message_command(message):
     '''
-    Сообщение приветствия администратора
+    Сообщение приветствия
     '''
     if message.chat.id not in admin:
-        return
-    bot.send_message(message.chat.id, 
+        # Приветствие пользователя
+        now = datetime.datetime.now()
+        bot.send_message(message.chat.id, 
+                    format.get_hello_client_text(), 
+                    reply_markup=format.get_hello_client_keyboard())
+        if (now.time().hour > 11):
+            bot.send_message(message.chat.id, 
+                    format.get_hello_client_late_text())
+    else:
+        # Приветствие администратора
+        bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(), 
+                     reply_markup=format.get_hello_admin_keyboard())
+        
+@bot.message_handler(content_types=['text'])
+def hello_message(message):
+    '''
+    Сообщение приветствия
+    '''
+    if message.chat.id not in admin:
+        # Приветствие пользователя
+        bot.send_message(message.chat.id, 
+                     format.get_hello_client_text(), 
+                     reply_markup=format.get_hello_client_keyboard())
+    else:
+        # Приветствие администратора
+        bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
                      reply_markup=format.get_hello_admin_keyboard())
 

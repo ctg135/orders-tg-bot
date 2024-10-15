@@ -1,3 +1,4 @@
+import datetime
 from telebot import types
 
 import db
@@ -7,12 +8,23 @@ category_2 = '🍝 Вторые блюда'
 category_3 = '🥗 Салаты'
 category_4 = '🧃 Напитки'
 
+button_make_order = '📖 Сделать заказ'
+
 def get_hello_admin_keyboard():
     '''
     Клавиатура приветствия с основными действиями бота
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu = types.KeyboardButton(text='/menu')
+    result.add(menu)
+    return result
+
+def get_hello_client_keyboard():
+    '''
+    Клавиатура приветствия клиента
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu = types.KeyboardButton(text=button_make_order)
     result.add(menu)
     return result
 
@@ -74,6 +86,20 @@ def get_hello_admin_text() -> str:
     Текст для справки администратору
     '''
     return 'Для просмотра меню нажмите /menu'
+
+def get_hello_client_text() -> str:
+    '''
+    Текст приветствия пользователя
+    '''
+    return '''
+👋 Здравствуйте, вас приветсвтует Пищепром!
+📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐'''
+
+def get_hello_client_late_text() -> str:
+    '''
+    Текст приветствия пользователя (после времени принятия заказа)
+    '''
+    return 'Хотите оформить доставку на завтра?'
 
 def format_menu_list(menu: db.Food) -> str:
     '''
