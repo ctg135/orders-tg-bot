@@ -8,7 +8,7 @@ import format
 
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
 admin = config.ADMIN_CHAT_ID
-basket = {}
+baskets = {}
 
 db.check_database()
 
@@ -45,7 +45,7 @@ def list_menu(message):
     if len(menu) == 0:
         bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
     else:
-        bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_keyboard())
+        bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_edit_keyboard())
 
 @bot.message_handler(content_types=['text'])
 def get_all_mesasge(message):
@@ -72,13 +72,13 @@ def get_all_mesasge(message):
                 if len(menu) == 0:
                     bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
                 else:
-                    bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_keyboard())
+                    bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_edit_keyboard())
             case format.button_menu_nice:
                 menu = db.menu_get_list_nice()
                 if len(menu) == 0:
                     bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
                 else:
-                    bot.send_message(message.chat.id, format.format_menu_list_nice(menu), reply_markup=format.get_menu_keyboard())
+                    bot.send_message(message.chat.id, format.format_menu_list_nice(menu), reply_markup=format.get_menu_edit_keyboard())
             case _:
             # Приветствие администратора
                 bot.send_message(message.chat.id, 
@@ -350,18 +350,27 @@ def start_order_step2(message):
     '''
     Обработка кнопок меню пользователя
     '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+
+    global baskets
+    if message.chat.id not in baskets.keys():
+        baskets.update({message.chat.id: {}})
+
     match message.text:
         case format.button_back:
             hello_message_command(message)
             # TODO Сброс корзины
         case format.button_category_1:
-            order_food_simple(message, 1)
+            order_food_simple_step1(message, 1)
         case format.button_category_2:
             pass
         case format.button_category_3:
-            order_food_simple(message, 4)
+            order_food_simple_step1(message, 4)
         case format.button_category_4:
-            order_food_simple(message, 5)
+            order_food_simple_step1(message, 5)
         case format.button_basket:
             pass
         case format.button_make_order:
@@ -370,16 +379,74 @@ def start_order_step2(message):
             msg = bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
             bot.register_next_step_handler(msg, start_order_step2)
 
-def order_food_simple(message, category):
+def order_food_simple_step1(message, category):
     '''
     Функция для добавления в заказ простых блюд
     Выгружает выбранную категории и показывает выбор пользователю
     '''
     menu = db.menu_get_list_category_nice(category)
-    # TODO: сделать клавиатуру для названий позиций
-    bot.send_message(message.chat.id, format.format_menu_list_nice(menu))
+    msg = bot.send_message(message.chat.id, 
+                     format.format_menu_list_nice(menu),
+                     reply_markup=format.get_menu_keyboard(menu))
+    bot.register_next_step_handler(msg, order_food_simple_step2, menu, category)
 
+def order_food_simple_step2(message, menu, category):
+    '''
+    Проверяет введенное название и предлагает выбрать количество
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    if message.text == format.button_back:
+        start_order(message)
+        return
+    id = format.get_id_from_name(menu, message.text)
+    if id == 0:
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    msg = bot.send_message(message.chat.id, 'Сколько добавить?', reply_markup=format.get_numbers_keyboard())
+    bot.register_next_step_handler(msg, order_food_simple_step3, id, category)
 
+def order_food_simple_step3(message, id, category):
+    '''
+    Проверка введенного числа и добавление в корзину
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_simple_step3, id, category)
+        return
+    if message.text == format.button_back:
+        order_food_simple_step1(message, category)
+        return
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_simple_step3, id, category)
+        return
+    count = 0
+    try:
+        count = int(message.text)
+    except ValueError:
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_simple_step3, id, category)
+        return
+    if count <= 0:
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_simple_step3, id, category)
+        return
+    
+    global baskets
+    if id in baskets[message.chat.id].keys():
+        baskets[message.chat.id][id] += count
+    else:
+        baskets[message.chat.id][id] = count
+    
+    bot.send_message(message.chat.id, 'Добавлено')
+    bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
+    order_food_simple_step1(message, category)
 
+    
 
 bot.infinity_polling()
+

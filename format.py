@@ -53,7 +53,7 @@ def get_menu_add_keyboard() -> types.InlineKeyboardMarkup:
     result.add(add)
     return result
 
-def get_menu_keyboard():
+def get_menu_edit_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для редактирования меню
     '''
@@ -80,13 +80,49 @@ def get_menu_category_keyboard() -> types.InlineKeyboardMarkup:
     result.add(cat_5, back)
     return result
 
-def get_menu_id_category_keyboard(menu: db.Food) -> types.InlineKeyboardMarkup:
+def get_menu_id_category_keyboard(menu: list) -> types.InlineKeyboardMarkup:
     '''
     Клавиатура с id записи
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
     for item in menu:
         result.add(types.KeyboardButton(text=item.id))
+    return result
+
+def get_menu_keyboard(menu: list) -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура с названиями блюд
+    Для преобразования обратно используется get_id_from_name(menu, name)
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    lefts = menu[::2]
+    rights = menu[1::2]
+    for left, right in zip(lefts, rights):
+        result.add(left.name, right.name)
+    if len(menu) % 2 == 1: 
+        result.add(types.KeyboardButton(text=lefts[-1].name))
+    result.add(types.KeyboardButton(text=button_back))
+    return result
+
+def get_numbers_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура с числами [1-9] и кнопкой "Назад"
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    num1 = types.KeyboardButton(text='1')
+    num2 = types.KeyboardButton(text='2')
+    num3 = types.KeyboardButton(text='3')
+    num4 = types.KeyboardButton(text='4')
+    num5 = types.KeyboardButton(text='5')
+    num6 = types.KeyboardButton(text='6')
+    num7 = types.KeyboardButton(text='7')
+    num8 = types.KeyboardButton(text='8')
+    num9 = types.KeyboardButton(text='9')
+    back = types.KeyboardButton(text=button_back)
+    result.add(num1, num2, num3)
+    result.add(num4, num5, num6)
+    result.add(num7, num8, num9)
+    result.add(back)
     return result
 
 def get_menu_visibility_edit_keyobard() -> types.InlineKeyboardMarkup:
@@ -175,10 +211,13 @@ def format_menu_list_full(menu: db.Food) -> str:
         result += f'  {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
     return result
 
-def format_menu_list_nice(menu: db.Food) -> str:
+def format_menu_list_nice(menu: list) -> str:
     '''
     Возвращает отформатированный список меню
     '''
+    if len(menu) == 0:
+        return 'Пока нету позиций'
+
     result = ''
     last_category = 0
     for food in menu:
@@ -220,3 +259,14 @@ def format_menu_list_id(menu: db.Food) -> str:
                     result += f'\n<b>{category_5}</b>\n'
         result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
     return result
+
+def get_id_from_name(menu: list, name: str) -> int:
+    '''
+    Из названия получает id блюда
+    Для клавиатуры - get_menu_keyboard(menu)
+    '''
+    id = 0
+    for item in menu:
+        if item.name == name:
+            id = item.id
+    return id
