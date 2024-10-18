@@ -8,7 +8,9 @@ import format
 
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
 admin = config.ADMIN_CHAT_ID
-baskets = {}
+
+# Корзины пользователей
+carts = {}
 
 db.check_database()
 
@@ -355,9 +357,9 @@ def start_order_step2(message):
         start_order(message)
         return
 
-    global baskets
-    if message.chat.id not in baskets.keys():
-        baskets.update({message.chat.id: {}})
+    global carts
+    if message.chat.id not in carts.keys():
+        carts.update({message.chat.id: {}})
 
     match message.text:
         case format.button_back:
@@ -402,7 +404,7 @@ def order_food_simple_step2(message, menu, category):
         start_order(message)
         return
     id = format.get_id_from_name(menu, message.text)
-    if id == 0:
+    if id == -1:
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
         return
@@ -436,11 +438,11 @@ def order_food_simple_step3(message, id, category):
         bot.register_next_step_handler(message, order_food_simple_step3, id, category)
         return
     
-    global baskets
-    if id in baskets[message.chat.id].keys():
-        baskets[message.chat.id][id] += count
+    global carts
+    if id in carts[message.chat.id].keys():
+        carts[message.chat.id][id] += count
     else:
-        baskets[message.chat.id][id] = count
+        carts[message.chat.id][id] = count
     
     bot.send_message(message.chat.id, 'Добавлено')
     bot.send_message(message.chat.id, 'Что-нибдуь ещё?')

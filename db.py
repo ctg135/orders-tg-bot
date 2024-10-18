@@ -11,7 +11,7 @@ class Food:
     3 - Салат
     4 - Напиток
     '''
-    id = 0
+    id = -1
     category = 0
     name = ''
     price = 0
