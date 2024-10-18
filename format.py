@@ -188,6 +188,12 @@ def get_hello_client_late_text() -> str:
     '''
     return 'Хотите оформить доставку на завтра?'
 
+def get_menu_no_items_text() -> str:
+    '''
+    Текст отсутствия меню (у клиента)
+    '''
+    return 'Извините, данное меню еще не заполнено. Попробуйте сделать заказ позже'
+
 def format_menu_list_full(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню, со знаком скрытости
@@ -259,6 +265,7 @@ def format_menu_list_id(menu: db.Food) -> str:
                     result += f'\n<b>{category_5}</b>\n'
         result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
     return result
+
 
 def get_id_from_name(menu: list, name: str) -> int:
     '''

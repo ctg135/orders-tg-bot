@@ -368,7 +368,7 @@ def start_order_step2(message):
         case format.button_category_1:
             order_food_simple_step1(message, 1)
         case format.button_category_2:
-            pass
+            order_food_complex_step1(message, 1)
         case format.button_category_3:
             order_food_simple_step1(message, 4)
         case format.button_category_4:
@@ -405,7 +405,7 @@ def order_food_simple_step2(message, menu, category):
         return
     id = format.get_id_from_name(menu, message.text)
     if id == -1:
-        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.send_message(message.chat.id, format.message_no_menu)
         start_order(message)
         return
     msg = bot.send_message(message.chat.id, 'Сколько добавить?', reply_markup=format.get_numbers_keyboard())
@@ -447,8 +447,79 @@ def order_food_simple_step3(message, id, category):
     bot.send_message(message.chat.id, 'Добавлено')
     bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
     order_food_simple_step1(message, category)
-
     
+def order_food_complex_step1(message, category):
+    '''
+    Функция для добавления в заказ сложных блюд
+    Выгружает первую часть подкатегории позиции (гарнир)
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    
+    menu = []
+    if category == 2:
+        menu = db.menu_get_list_category_nice(category)
+    else: 
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    
+    if len(menu) == 0:
+        bot.send_message(message.chat.id, format.message_no_menu)
+        start_order(message)
+        return
+    
+    msg = bot.send_message(message.chat.id, 
+                     format.format_menu_list_nice(menu),
+                     reply_markup=format.get_menu_keyboard(menu))
+    bot.register_next_step_handler(msg, order_food_complex_step2, menu, category)
+    
+def order_food_complex_step2(message, menu, category):
+    '''
+    Установка первой выбранной части и предложение второй
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        order_food_complex_step1(message)
+        return
+    if message.text == format.button_back:
+        order_food_complex_step1(message)
+        return
+    
+    id = format.get_id_from_name(menu, message.text)
+    if id == -1:
+        bot.send_message(message.chat.id, format.message_no_menu)
+        order_food_complex_step1(message)
+        return
+
+    bot.register_next_step_handler(message, order_food_complex_step2, menu, category, id)
+
+def order_food_complex_step3(message, menu, category, first_id):
+    '''
+    Установка второй части и предложение количества
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        order_food_complex_step1(message)
+        return
+    if message.text == format.button_back:
+        order_food_complex_step1(message)
+        return
+    
+    id = format.get_id_from_name(menu, message.text)
+    if id == -1:
+        bot.send_message(message.chat.id, format.message_no_menu)
+        order_food_complex_step1(message)
+        return
+    
+    bot.register_next_step_handler(message, order_food_complex_step4, menu, category, id)
+
+def order_food_complex_step4(message, menu, category):
+    '''
+    Установка количества
+    '''
 
 bot.infinity_polling()
 
