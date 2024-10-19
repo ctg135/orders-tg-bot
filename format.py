@@ -214,7 +214,7 @@ def format_menu_list_full(menu: db.Food) -> str:
                     result += f'\n<b>{category_4}</b>\n'
                 case 5:
                     result += f'\n<b>{category_5}</b>\n'
-        result += f'  {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
+        result += f'  {food.name} <i>{food.price} руб.</i> { "" if food.visibility else "🫣" } n'
     return result
 
 def format_menu_list_nice(menu: list) -> str:
@@ -263,7 +263,7 @@ def format_menu_list_id(menu: db.Food) -> str:
                     result += f'\n<b>{category_4}</b>\n'
                 case 5:
                     result += f'\n<b>{category_5}</b>\n'
-        result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {'' if food.visibility else '🫣'}\n'
+        result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {"" if food.visibility else "🫣" }\n'
     return result
 
 

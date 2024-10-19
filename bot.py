@@ -368,13 +368,13 @@ def start_order_step2(message):
         case format.button_category_1:
             order_food_simple_step1(message, 1)
         case format.button_category_2:
-            order_food_complex_step1(message, 1)
+            order_food_complex_step1(message, 2)
         case format.button_category_3:
             order_food_simple_step1(message, 4)
         case format.button_category_4:
             order_food_simple_step1(message, 5)
         case format.button_basket:
-            pass
+            print(carts[message.chat.id])
         case format.button_make_order:
             pass
         case _: 
@@ -467,7 +467,7 @@ def order_food_complex_step1(message, category):
         return
     
     if len(menu) == 0:
-        bot.send_message(message.chat.id, format.message_no_menu)
+        bot.send_message(message.chat.id, format.get_menu_no_items_text())
         start_order(message)
         return
     
@@ -482,19 +482,34 @@ def order_food_complex_step2(message, menu, category):
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
-        order_food_complex_step1(message)
+        start_order(message)
         return
     if message.text == format.button_back:
-        order_food_complex_step1(message)
+        start_order(message)
         return
     
     id = format.get_id_from_name(menu, message.text)
     if id == -1:
-        bot.send_message(message.chat.id, format.message_no_menu)
-        order_food_complex_step1(message)
+        bot.send_message(message.chat.id, format.get_menu_no_items_text())
+        start_order(message)
         return
-
-    bot.register_next_step_handler(message, order_food_complex_step2, menu, category, id)
+    
+    menu = []
+    if category == 2:
+        menu = db.menu_get_list_category_nice(category + 1)
+    else: 
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    
+    if len(menu) == 0:
+        bot.send_message(message.chat.id, format.get_menu_no_items_text())
+        start_order(message)
+        return
+    msg = bot.send_message(message.chat.id, 
+                     format.format_menu_list_nice(menu),
+                     reply_markup=format.get_menu_keyboard(menu))
+    bot.register_next_step_handler(message, order_food_complex_step3, menu, category, id)
 
 def order_food_complex_step3(message, menu, category, first_id):
     '''
@@ -508,18 +523,53 @@ def order_food_complex_step3(message, menu, category, first_id):
         order_food_complex_step1(message)
         return
     
-    id = format.get_id_from_name(menu, message.text)
-    if id == -1:
-        bot.send_message(message.chat.id, format.message_no_menu)
+    second_id = format.get_id_from_name(menu, message.text)
+    if second_id == -1:
+        bot.send_message(message.chat.id, format.get_menu_no_items_text())
         order_food_complex_step1(message)
         return
-    
-    bot.register_next_step_handler(message, order_food_complex_step4, menu, category, id)
+    msg = bot.send_message(message.chat.id, 
+                           'Сколько добавить?', 
+                           reply_markup=format.get_numbers_keyboard())
+    bot.register_next_step_handler(msg, order_food_complex_step4, menu, category, first_id, second_id)
 
-def order_food_complex_step4(message, menu, category):
+def order_food_complex_step4(message, menu, category, first_id, second_id):
     '''
     Установка количества
     '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_complex_step4, id, category)
+        return
+    if message.text == format.button_back:
+        order_food_simple_step1(message, category)
+        return
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_complex_step4, id, category)
+        return
+    count = 0
+    try:
+        count = int(message.text)
+    except ValueError:
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_complex_step4, id, category)
+        return
+    if count <= 0:
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, order_food_complex_step4, id, category)
+        return
+    
+    id = f'{first_id}+{second_id}'
+    global carts
+    if id in carts[message.chat.id].keys():
+        carts[message.chat.id][id] += count
+    else:
+        carts[message.chat.id][id] = count
+    
+    bot.send_message(message.chat.id, 'Добавлено')
+    bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
+    order_food_complex_step1(message, category)
 
 bot.infinity_polling()
 
