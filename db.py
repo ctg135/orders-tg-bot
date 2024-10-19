@@ -145,3 +145,26 @@ def menu_delete_item(id: int) -> None:
     cur = con.cursor()
     cur.execute(f'''DELETE FROM menu WHERE id = {id};''')
     con.commit()
+
+def get_item(id) -> Food:
+    '''
+    Получение одного элемента из БД
+    В случае отсутствия возвращает пустой элемент
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT * FROM menu 
+                    WHERE id = {id};''')
+    value = cur.fetchone()
+
+    if value is None:
+        return Food()
+    
+    result = Food()
+    result.id = value[0]
+    result.category = value[1]
+    result.name = value[2]
+    result.price = value[3]
+    result.visibility = value[4]
+
+    return result

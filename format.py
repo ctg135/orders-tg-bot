@@ -19,7 +19,8 @@ button_menu_visible = 'Указать'
 
 button_init_order = '📖 Сделать заказ'
 button_make_order = '✅ Заказ собран'
-button_basket = 'Корзина'
+button_cart = 'Корзина'
+button_cart_clear = 'Очистить корзину'
 button_category_1 = '🍲 Первые блюда'
 button_category_2 = '🍝 Вторые блюда'
 button_category_3 = '🥗 Салаты'
@@ -151,7 +152,7 @@ def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
     Основная клавиатура для сборки заказа
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    basket = types.KeyboardButton(text=button_basket)
+    basket = types.KeyboardButton(text=button_cart)
     make_order = types.KeyboardButton(text=button_make_order)
     back = types.KeyboardButton(text=button_back)
     cat_1 = types.KeyboardButton(text=button_category_1)
@@ -164,6 +165,23 @@ def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
     result.add(back)
     return result
 
+def get_cart_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура меню корзины
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    clear = types.KeyboardButton(text=button_cart_clear)
+    make_order = types.KeyboardButton(text=button_make_order)
+    back = types.KeyboardButton(text=button_back)
+    result.add(back, clear)
+    result.add(make_order)
+    return result
+
+def get_cart_list_keyboard(cart: map):
+    '''
+    Клавиатура для списка выбранных товаров
+    '''
+    return None
 
 def get_hello_admin_text() -> str:
     '''
@@ -193,6 +211,15 @@ def get_menu_no_items_text() -> str:
     Текст отсутствия меню (у клиента)
     '''
     return 'Извините, данное меню еще не заполнено. Попробуйте сделать заказ позже'
+
+def get_cart_help_text() -> str:
+    '''
+    Вспомогательный текст для корзины
+    '''
+    return '''
+Измените количество при помощи ➕ и ➖
+Нажмите на ❌ для удаления одной позиции
+'''
 
 def format_menu_list_full(menu: db.Food) -> str:
     '''
@@ -264,6 +291,34 @@ def format_menu_list_id(menu: db.Food) -> str:
                 case 5:
                     result += f'\n<b>{category_5}</b>\n'
         result += f'{food.id}. {food.name} <i>{food.price} руб.</i> {"" if food.visibility else "🫣" }\n'
+    return result
+
+def format_cart_list(cart: map) -> str:
+    '''
+    Возвращает список товаров из корзины
+    '''
+    if len(cart) == 0:
+        return 'Ваша корзина пуста'
+
+    result = ''
+    counter = 1
+    summary = 0
+    for id, count in cart.items():
+        id_temp = str(id)
+        if id_temp.isdigit():
+            item = db.get_item(id)
+            cost = item.price * count
+            summary += cost
+            counter += 1
+            result += f'{counter}. <b>{item.name}</b> ({item.price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
+        else:
+            ids = id_temp.split('+')
+            items = [db.get_item(ids[0]), db.get_item(ids[1])]
+            cost = (items[0].price + items[1].price) * count
+            summary += cost
+            counter += 1
+            result += f'{counter}. <b>{items[0].name} с {items[1].name}</b> ({items[0].price + items[1].price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
+    result += f'Общая сумма заказа: {summary} руб.'
     return result
 
 

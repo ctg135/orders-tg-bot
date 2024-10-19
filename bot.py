@@ -373,10 +373,10 @@ def start_order_step2(message):
             order_food_simple_step1(message, 4)
         case format.button_category_4:
             order_food_simple_step1(message, 5)
-        case format.button_basket:
-            print(carts[message.chat.id])
+        case format.button_cart:
+            cart_edit_step1(message)
         case format.button_make_order:
-            pass
+            make_order(message)
         case _: 
             msg = bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
             bot.register_next_step_handler(msg, start_order_step2)
@@ -570,6 +570,59 @@ def order_food_complex_step4(message, menu, category, first_id, second_id):
     bot.send_message(message.chat.id, 'Добавлено')
     bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
     order_food_complex_step1(message, category)
+
+# Секция редактирования корзины
+
+def cart_edit_step1(message):
+    '''
+    Отправка списка выбранных товаров и меню для его редактирования
+    Список товаров с ценником и количеством и итогом
+    Кнопки на сообщении:
+        Товар - [delete]
+        [+] [-] [Количество]
+    '''
+    global carts
+    msg = bot.send_message(message.chat.id, 
+                           format.get_cart_help_text(), 
+                           reply_markup=format.get_cart_keyboard())
+    bot.send_message(message.chat.id,
+                     format.format_cart_list(carts[message.chat.id]),
+                     reply_markup=format.get_cart_list_keyboard(carts[message.chat.id])
+                     )
+    
+    bot.register_next_step_handler(msg, cart_edit_step2)
+    # Отправка второго сообщения и регистрация для коллбеков
+
+def cart_edit_step2(message):
+    '''
+    Обработка текстовых кнопок пользователя в меню корзины
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(msg, cart_edit_step2)
+        return
+
+    match message.text:
+        case format.button_back:
+            start_order(message)
+        case format.button_cart_clear:
+            carts[message.chat.id] = {}
+            bot.send_message(message.chat.id, 'Корзина очищена')
+            start_order(message)
+        case format.button_make_order:
+            make_order(message)
+        case _:
+            msg = bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+            bot.register_next_step_handler(msg, cart_edit_step2)
+
+# Секция обработки заказа
+
+def make_order(message):
+    '''
+    Начинает обработку заказа
+    '''
+    pass
+
 
 bot.infinity_polling()
 
