@@ -93,12 +93,25 @@ def get_callback(callback):
         # Добавление нового блюда
         case 'menu_add':
             menu_add_item_step1(callback)
+            return
         # Редактирование блюда
         case 'menu_edit':
             menu_edit_item_step1(callback)
+            return
         # Удаление элемента в меню
         case 'menu_delete':
             menu_delete_item_step1(callback)
+            return
+    call = callback.data.split('_')
+    match call[0]:
+        case 'cart':
+            match call[1]:
+                case 'delete':
+                    carts[callback.message.chat.id][int(call[2])] = {}
+                case 'plus':
+                    pass
+                case 'minus':
+                    pass
 
 # Секция добавления элемента в меню
 
@@ -587,11 +600,12 @@ def cart_edit_step1(message):
                            reply_markup=format.get_cart_keyboard())
     bot.send_message(message.chat.id,
                      format.format_cart_list(carts[message.chat.id]),
-                     reply_markup=format.get_cart_list_keyboard(carts[message.chat.id])
+                     reply_markup=format.get_cart_edit_keyboard(carts[message.chat.id])
                      )
     
+
     bot.register_next_step_handler(msg, cart_edit_step2)
-    # Отправка второго сообщения и регистрация для коллбеков
+    # Отправка второго сообщения
 
 def cart_edit_step2(message):
     '''

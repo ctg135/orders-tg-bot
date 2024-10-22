@@ -177,11 +177,30 @@ def get_cart_keyboard() -> types.InlineKeyboardMarkup:
     result.add(make_order)
     return result
 
-def get_cart_list_keyboard(cart: map):
+def get_cart_edit_keyboard(cart: map) -> types.InlineKeyboardMarkup:
     '''
-    Клавиатура для списка выбранных товаров
+    Клавиатура для редактирования корзины в заказе
     '''
-    return None
+    result = types.InlineKeyboardMarkup()
+    counter = 1
+    for id, count in cart.items():
+        item = db.get_item(id)
+        item_delete = types.InlineKeyboardButton(
+            text=f'{counter}. ❌ {item.name}', 
+            callback_data=f'cart_delete_{id}')
+        item_plus = types.InlineKeyboardButton(
+            text='➕', 
+            callback_data=f'cart_set_{id}')
+        item_minus = types.InlineKeyboardButton(
+            text='➖', 
+            callback_data=f'cart_set_{id}')
+        item_count = types.InlineKeyboardButton(
+            text=str(count), 
+            callback_data=f'cart_delete_{id}')
+        result.add(item_delete)
+        result.add(item_plus, item_count, item_minus)
+        counter += 1
+    return result
 
 def get_hello_admin_text() -> str:
     '''
