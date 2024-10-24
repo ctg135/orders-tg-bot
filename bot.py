@@ -104,14 +104,52 @@ def get_callback(callback):
             return
     call = callback.data.split('_')
     match call[0]:
+        # Редактирование корзины
         case 'cart':
             match call[1]:
+                # При удалении
                 case 'delete':
-                    carts[callback.message.chat.id][int(call[2])] = {}
+                    if '+' in call[2]:
+                        carts[callback.message.chat.id].pop(call[2])
+                    else: 
+                        carts[callback.message.chat.id].pop(int(call[2]))
+                    bot.delete_message(callback.message.chat.id, callback.message.id)
+                    bot.send_message(callback.message.chat.id,
+                        format.format_cart_list(carts[callback.message.chat.id]),
+                        reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
+                        )
+                # При добавлении
                 case 'plus':
-                    pass
+                    if '+' in call[2]:
+                        count = carts[callback.message.chat.id][call[2]]
+                        carts[callback.message.chat.id][call[2]] = count + 1
+                    else: 
+                        count = carts[callback.message.chat.id][int(call[2])]
+                        carts[callback.message.chat.id][int(call[2])] = count + 1
+                    bot.delete_message(callback.message.chat.id, callback.message.id)
+                    bot.send_message(callback.message.chat.id,
+                        format.format_cart_list(carts[callback.message.chat.id]),
+                        reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
+                        )
+                # При уменьшении
                 case 'minus':
-                    pass
+                    if '+' in call[2]:
+                        count = carts[callback.message.chat.id][call[2]]
+                        if count <= 1:
+                            carts[callback.message.chat.id].pop(call[2])
+                        else: 
+                            carts[callback.message.chat.id][call[2]] = count - 1
+                    else: 
+                        count = carts[callback.message.chat.id][int(call[2])]
+                        if count <= 1:
+                            carts[callback.message.chat.id].pop(int(call[2]))
+                        else: 
+                            carts[callback.message.chat.id][int(call[2])] = count - 1
+                    bot.delete_message(callback.message.chat.id, callback.message.id)
+                    bot.send_message(callback.message.chat.id,
+                        format.format_cart_list(carts[callback.message.chat.id]),
+                        reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
+                        )
 
 # Секция добавления элемента в меню
 

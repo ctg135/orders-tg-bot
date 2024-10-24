@@ -184,16 +184,24 @@ def get_cart_edit_keyboard(cart: map) -> types.InlineKeyboardMarkup:
     result = types.InlineKeyboardMarkup()
     counter = 1
     for id, count in cart.items():
-        item = db.get_item(id)
-        item_delete = types.InlineKeyboardButton(
-            text=f'{counter}. ❌ {item.name}', 
-            callback_data=f'cart_delete_{id}')
+        item_delete = ''
+        if '+' in str(id):
+            ids = id.split('+')
+            items = [db.get_item(ids[0]), db.get_item(ids[1])]
+            item_delete = types.InlineKeyboardButton(
+                text=f'{counter}. ❌ {items[0].name} с {items[1].name}', 
+                callback_data=f'cart_delete_{id}')
+        else:
+            item = db.get_item(id)
+            item_delete = types.InlineKeyboardButton(
+                text=f'{counter}. ❌ {item.name}', 
+                callback_data=f'cart_delete_{id}')
         item_plus = types.InlineKeyboardButton(
             text='➕', 
-            callback_data=f'cart_set_{id}')
+            callback_data=f'cart_plus_{id}')
         item_minus = types.InlineKeyboardButton(
             text='➖', 
-            callback_data=f'cart_set_{id}')
+            callback_data=f'cart_minus_{id}')
         item_count = types.InlineKeyboardButton(
             text=str(count), 
             callback_data=f'cart_delete_{id}')
@@ -324,19 +332,19 @@ def format_cart_list(cart: map) -> str:
     summary = 0
     for id, count in cart.items():
         id_temp = str(id)
-        if id_temp.isdigit():
-            item = db.get_item(id)
-            cost = item.price * count
-            summary += cost
-            counter += 1
-            result += f'{counter}. <b>{item.name}</b> ({item.price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
-        else:
+        if '+' in id_temp:
             ids = id_temp.split('+')
             items = [db.get_item(ids[0]), db.get_item(ids[1])]
             cost = (items[0].price + items[1].price) * count
             summary += cost
             counter += 1
             result += f'{counter}. <b>{items[0].name} с {items[1].name}</b> ({items[0].price + items[1].price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
+        else:
+            item = db.get_item(id_temp)
+            cost = item.price * count
+            summary += cost
+            counter += 1
+            result += f'{counter}. <b>{item.name}</b> ({item.price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
     result += f'Общая сумма заказа: {summary} руб.'
     return result
 
