@@ -25,7 +25,7 @@ def check_database() -> None:
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
-                (`id` INTEGER, `user_id` TEXT, `date` date, `telephone` TEXT, `order_list` TEXT)''')
+                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT UNIQUE, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
     con.commit()
@@ -168,3 +168,31 @@ def get_item(id) -> Food:
     result.visibility = value[4]
 
     return result
+
+def get_telephone_from_last_order(user_id: int) -> str:
+    '''
+    Возвращает последний использованный номер телефона
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT id, telephone FROM `order` 
+                    WHERE user_id = {user_id} 
+                    ORDER BY id DESC;''')
+    value = cur.fetchone()
+
+    if value is None: return ''
+    else: return value[1]
+
+def get_address_from_last_order(user_id: int) -> str:
+    '''
+    Возвращает последний использованный адрес
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT id, address FROM `order` 
+                    WHERE user_id = {user_id} 
+                    ORDER BY id DESC;''')
+    value = cur.fetchone()
+
+    if value is None: return ''
+    else: return value[1]

@@ -1,5 +1,6 @@
 import datetime
 import telebot
+import re
 from telebot import types
 
 import config
@@ -414,8 +415,9 @@ def start_order_step2(message):
 
     match message.text:
         case format.button_back:
+            if message.chat.id in carts.keys():
+                carts.pop(message.chat.id)
             hello_message_command(message)
-            # TODO Сброс корзины
         case format.button_category_1:
             order_food_simple_step1(message, 1)
         case format.button_category_2:
@@ -672,8 +674,91 @@ def cart_edit_step2(message):
 def make_order(message):
     '''
     Начинает обработку заказа
+    Если корзина пустая, то возвращает.
+    В другом случае спрашиваем: номер телефона (если нету в базе);
+    Адрес доставки (если нету в базе)
+    И отправляем в чат для заказов предложение принять/отменить
     '''
-    pass
+    global carts
+    if message.chat.id not in carts.keys() or carts[message.chat.id] == {}:
+        msg = bot.send_message(message.chat.id, format.get_cart_empty_text())
+        start_order(msg)
+        return
+    
+    bot.send_message(message.chat.id, 
+                     format.get_order_ok_text(carts[message.chat.id]),
+                     reply_markup=format.get_order_ok_keyboard()
+                     )
+    bot.register_next_step_handler(message, make_order_step1)
+
+def make_order_step1(message):
+    '''
+    Подтверждает выбор пользователя и предлагает номер телефона
+    Также предлагает ввести старый номер телефона
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        start_order(message)
+        return
+    if message.text == format.button_back:
+        start_order(message)
+        return
+
+    match message.text:
+        case format.button_ok:
+            telephone = db.get_telephone_from_last_order(message.chat.id)
+            msg = bot.send_message(message.chat.id,
+                             format.get_order_telephone_text(telephone),
+                             reply_markup=format.get_order_telephone_keyboard(telephone))
+            bot.register_next_step_handler(msg, make_order_step2)
+        case '_':
+            start_order(message)
+            return
+            
+def make_order_step2(message):
+    '''
+    Получает номер телефона и предлагает ввести адрес
+    Также предлагает ввести адрес из предыдущего заказа
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, make_order_step2)
+        return
+    if message.text == format.button_back:
+        start_order(message)
+        return
+    
+    telepgone_regexp = r'(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){10,14}(\s*)?'
+    match = re.match(telepgone_regexp, message.text)
+
+    if not match:
+        bot.send_message(message.chat.id, 'Ошибка: некорректный номер телефона')
+        bot.register_next_step_handler(message, make_order_step2)
+        return
+
+    address = db.get_address_from_last_order(message.chat.id)
+
+    msg = bot.send_message(message.chat.id,
+                           format.get_order_address_text(address),
+                           reply_markup=format.get_order_address_keyboard(address))
+    bot.register_next_step_handler(msg, make_order_step3, match.string)
+    
+def make_order_step3(message, telephone):
+    '''
+    Получает адрес и отправляет сообщение в группу
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(message, make_order_step3)
+        return
+    if message.text == format.button_back:
+        message.text = format.button_ok
+        make_order_step1(message)
+        return
+    
+    # Доделать, чтобы сохранял заказ в БД и отправлял сообщение с кнопкой принятия и отмены в чат с заказами
+
+    print(message.chat.id, f'{telephone} <i>{message.text}</i>')
 
 
 bot.infinity_polling()

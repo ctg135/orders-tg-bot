@@ -177,6 +177,52 @@ def get_cart_keyboard() -> types.InlineKeyboardMarkup:
     result.add(make_order)
     return result
 
+def get_order_ok_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура подтверждения заказа
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    ok = types.KeyboardButton(text=button_ok)
+    back = types.KeyboardButton(text=button_back)
+    result.add(ok, back)
+    return result
+
+def get_order_telephone_keyboard(telephone: str = '') -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для набора телефона заказа
+    Подставляет изначальный телефон, если присутсвтует
+    '''
+    if telephone == '':
+        result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        back = types.KeyboardButton(text=button_back)
+        result.add(back)
+        return result
+    else:
+        result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        tel = types.ReplyKeyboardMarkup(text=telephone)
+        back = types.KeyboardButton(text=button_back)
+        result.add(tel)
+        result.add(back)
+        return result
+
+def get_order_address_keyboard(address: str = '') -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для набора адреса доставки заказа
+    Подставляет изначальный адрес, если присутсвтует
+    '''
+    if address == '':
+        result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        back = types.KeyboardButton(text=button_back)
+        result.add(back)
+        return result
+    else:
+        result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        adr = types.ReplyKeyboardMarkup(text=address)
+        back = types.KeyboardButton(text=button_back)
+        result.add(adr)
+        result.add(back)
+        return result
+
 def get_cart_edit_keyboard(cart: map) -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для редактирования корзины в заказе
@@ -248,6 +294,52 @@ def get_cart_help_text() -> str:
 Нажмите на ❌ для удаления одной позиции
 '''
 
+def get_cart_empty_text() -> str:
+    '''
+    Текст при попытке выполнить заказ с пустой корзиной
+    '''
+    return '''
+Ваша корзина пуста. Сначала выберите что-нибудь 😉
+'''
+
+def get_order_ok_text(cart: map):
+    '''
+    Текст для подтвежждения, что пользователь готов делать заказ
+    '''
+    return f'''
+Готовы заказывать?
+    
+Ваш заказ:
+{format_cart_list(cart)}
+'''
+
+def get_order_telephone_text(telephone: str = '') -> str:
+    '''
+    Текст для запроса у пользователя номера телефона
+    '''
+    if telephone == '':
+        return 'Укажите номер телефона для проверки заказа 📲'
+    else:
+        return f'''
+Укажите номер телефона для проверки заказа 📲
+
+Последний использованный: <code>{telephone}</code>
+'''
+    
+def get_order_address_text(address: str = '') -> str:
+    '''
+    Текст для запроса у пользователя адреса доставки
+    '''
+    if address == '':
+        return 'Укажите адрес доставки 🚗'
+    else:
+        return f'''
+Укажите адрес доставки 🚗
+
+Последнй использованный:
+<i>{address}</i>
+'''
+    
 def format_menu_list_full(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню, со знаком скрытости
