@@ -12,6 +12,8 @@ admin = config.ADMIN_CHAT_ID
 
 # Корзины пользователей
 carts = {}
+# Сообщения с корзиной пользователя
+cart_message_id = {}
 
 db.check_database()
 
@@ -115,10 +117,11 @@ def get_callback(callback):
                     else: 
                         carts[callback.message.chat.id].pop(int(call[2]))
                     bot.delete_message(callback.message.chat.id, callback.message.id)
-                    bot.send_message(callback.message.chat.id,
+                    msg = bot.send_message(callback.message.chat.id,
                         format.format_cart_list(carts[callback.message.chat.id]),
                         reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
                         )
+                    cart_message_id[callback.message.chat.id] = msg.id
                 # При добавлении
                 case 'plus':
                     if '+' in call[2]:
@@ -128,10 +131,12 @@ def get_callback(callback):
                         count = carts[callback.message.chat.id][int(call[2])]
                         carts[callback.message.chat.id][int(call[2])] = count + 1
                     bot.delete_message(callback.message.chat.id, callback.message.id)
-                    bot.send_message(callback.message.chat.id,
+                    msg = bot.send_message(callback.message.chat.id,
                         format.format_cart_list(carts[callback.message.chat.id]),
                         reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
                         )
+                    cart_message_id[callback.message.chat.id] = msg.id
+
                 # При уменьшении
                 case 'minus':
                     if '+' in call[2]:
@@ -147,10 +152,12 @@ def get_callback(callback):
                         else: 
                             carts[callback.message.chat.id][int(call[2])] = count - 1
                     bot.delete_message(callback.message.chat.id, callback.message.id)
-                    bot.send_message(callback.message.chat.id,
+                    msg = bot.send_message(callback.message.chat.id,
                         format.format_cart_list(carts[callback.message.chat.id]),
                         reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
                         )
+                    cart_message_id[callback.message.chat.id] = msg.id
+
 
 # Секция добавления элемента в меню
 
@@ -606,6 +613,7 @@ def order_food_complex_step4(message, menu, category, first_id, second_id):
         count = int(message.text)
     except ValueError:
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+    
         bot.register_next_step_handler(message, order_food_complex_step4, id, category)
         return
     if count <= 0:
@@ -638,14 +646,12 @@ def cart_edit_step1(message):
     msg = bot.send_message(message.chat.id, 
                            format.get_cart_help_text(), 
                            reply_markup=format.get_cart_keyboard())
-    bot.send_message(message.chat.id,
+    msg_cart = bot.send_message(message.chat.id,
                      format.format_cart_list(carts[message.chat.id]),
                      reply_markup=format.get_cart_edit_keyboard(carts[message.chat.id])
                      )
-    
-
+    cart_message_id[message.chat.id] = msg_cart.id
     bot.register_next_step_handler(msg, cart_edit_step2)
-    # Отправка второго сообщения
 
 def cart_edit_step2(message):
     '''
@@ -656,6 +662,10 @@ def cart_edit_step2(message):
         bot.register_next_step_handler(msg, cart_edit_step2)
         return
 
+    # Удаление сообщения с корзиной перед обработкой заказа
+    if message.chat.id in cart_message_id.keys():
+        bot.delete_message(message.chat.id, cart_message_id.pop(message.chat.id))
+    
     match message.text:
         case format.button_back:
             start_order(message)
@@ -684,6 +694,11 @@ def make_order(message):
         msg = bot.send_message(message.chat.id, format.get_cart_empty_text())
         start_order(msg)
         return
+    
+    # Удаление сообщения с корзиной перед обработкой заказа
+    if message.chat.id in cart_message_id.keys():
+        bot.delete_message(message.chat.id, cart_message_id.pop(message.chat.id))
+        
     
     bot.send_message(message.chat.id, 
                      format.get_order_ok_text(carts[message.chat.id]),
