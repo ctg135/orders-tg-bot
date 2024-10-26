@@ -16,6 +16,8 @@ button_menu_nice = 'Меню дня'
 button_menu_full = 'Полный перечень'
 button_menu_hidden = 'Скрыть'
 button_menu_visible = 'Указать'
+button_order_accept = '✅ Принять'
+button_order_cancel = '❌ Отмена'
 
 button_init_order = '📖 Сделать заказ'
 button_make_order = '✅ Заказ собран'
@@ -26,7 +28,7 @@ button_category_2 = '🍝 Вторые блюда'
 button_category_3 = '🥗 Салаты'
 button_category_4 = '🧃 Напитки'
 
-def get_hello_admin_keyboard() -> types.InlineKeyboardMarkup:
+def get_hello_admin_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура приветствия с основными действиями бота
     '''
@@ -36,7 +38,7 @@ def get_hello_admin_keyboard() -> types.InlineKeyboardMarkup:
     result.add(menu_nice, menu_full)
     return result
 
-def get_hello_client_keyboard() -> types.InlineKeyboardMarkup:
+def get_hello_client_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура приветствия клиента
     '''
@@ -45,7 +47,7 @@ def get_hello_client_keyboard() -> types.InlineKeyboardMarkup:
     result.add(menu)
     return result
 
-def get_menu_add_keyboard() -> types.InlineKeyboardMarkup:
+def get_menu_add_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для пустого меню
     '''
@@ -54,7 +56,7 @@ def get_menu_add_keyboard() -> types.InlineKeyboardMarkup:
     result.add(add)
     return result
 
-def get_menu_edit_keyboard() -> types.InlineKeyboardMarkup:
+def get_menu_edit_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для редактирования меню
     '''
@@ -65,7 +67,7 @@ def get_menu_edit_keyboard() -> types.InlineKeyboardMarkup:
     result.add(add, edit, delete)
     return result
 
-def get_menu_category_keyboard() -> types.InlineKeyboardMarkup:
+def get_menu_category_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для получения категории блюда
     '''
@@ -81,7 +83,7 @@ def get_menu_category_keyboard() -> types.InlineKeyboardMarkup:
     result.add(cat_5, back)
     return result
 
-def get_menu_id_category_keyboard(menu: list) -> types.InlineKeyboardMarkup:
+def get_menu_id_category_keyboard(menu: list) -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура с id записи
     '''
@@ -90,7 +92,7 @@ def get_menu_id_category_keyboard(menu: list) -> types.InlineKeyboardMarkup:
         result.add(types.KeyboardButton(text=item.id))
     return result
 
-def get_menu_keyboard(menu: list) -> types.InlineKeyboardMarkup:
+def get_menu_keyboard(menu: list) -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура с названиями блюд
     Для преобразования обратно используется get_id_from_name(menu, name)
@@ -105,7 +107,7 @@ def get_menu_keyboard(menu: list) -> types.InlineKeyboardMarkup:
     result.add(types.KeyboardButton(text=button_back))
     return result
 
-def get_numbers_keyboard() -> types.InlineKeyboardMarkup:
+def get_numbers_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура с числами [1-9] и кнопкой "Назад"
     '''
@@ -126,7 +128,7 @@ def get_numbers_keyboard() -> types.InlineKeyboardMarkup:
     result.add(back)
     return result
 
-def get_menu_visibility_edit_keyobard() -> types.InlineKeyboardMarkup:
+def get_menu_visibility_edit_keyobard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для получения видимости пункта
     '''
@@ -138,7 +140,7 @@ def get_menu_visibility_edit_keyobard() -> types.InlineKeyboardMarkup:
     result.add(ok)
     return result
 
-def get_ok_keyboard() -> types.InlineKeyboardMarkup:
+def get_ok_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура с надписью Ок
     '''
@@ -147,7 +149,7 @@ def get_ok_keyboard() -> types.InlineKeyboardMarkup:
     result.add(ok)
     return result
 
-def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
+def get_order_start_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Основная клавиатура для сборки заказа
     '''
@@ -165,7 +167,7 @@ def get_order_start_keyboard() -> types.InlineKeyboardMarkup:
     result.add(back)
     return result
 
-def get_cart_keyboard() -> types.InlineKeyboardMarkup:
+def get_cart_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура меню корзины
     '''
@@ -177,7 +179,7 @@ def get_cart_keyboard() -> types.InlineKeyboardMarkup:
     result.add(make_order)
     return result
 
-def get_order_ok_keyboard() -> types.InlineKeyboardMarkup:
+def get_order_ok_keyboard() -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура подтверждения заказа
     '''
@@ -187,7 +189,7 @@ def get_order_ok_keyboard() -> types.InlineKeyboardMarkup:
     result.add(ok, back)
     return result
 
-def get_order_telephone_keyboard(telephone: str = '') -> types.InlineKeyboardMarkup:
+def get_order_telephone_keyboard(telephone: str = '') -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для набора телефона заказа
     Подставляет изначальный телефон, если присутсвтует
@@ -199,13 +201,13 @@ def get_order_telephone_keyboard(telephone: str = '') -> types.InlineKeyboardMar
         return result
     else:
         result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        tel = types.ReplyKeyboardMarkup(text=telephone)
+        tel = types.KeyboardButton(text=telephone)
         back = types.KeyboardButton(text=button_back)
         result.add(tel)
         result.add(back)
         return result
 
-def get_order_address_keyboard(address: str = '') -> types.InlineKeyboardMarkup:
+def get_order_address_keyboard(address: str = '') -> types.ReplyKeyboardMarkup:
     '''
     Клавиатура для набора адреса доставки заказа
     Подставляет изначальный адрес, если присутсвтует
@@ -217,7 +219,7 @@ def get_order_address_keyboard(address: str = '') -> types.InlineKeyboardMarkup:
         return result
     else:
         result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        adr = types.ReplyKeyboardMarkup(text=address)
+        adr = types.KeyboardButton(text=address)
         back = types.KeyboardButton(text=button_back)
         result.add(adr)
         result.add(back)
@@ -254,6 +256,16 @@ def get_cart_edit_keyboard(cart: map) -> types.InlineKeyboardMarkup:
         result.add(item_delete)
         result.add(item_plus, item_count, item_minus)
         counter += 1
+    return result
+
+def get_ordered_accept_keyboard(number: int) -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для принятия или отмены заказа оператором
+    '''
+    result = types.InlineKeyboardMarkup()
+    accept = types.InlineKeyboardButton(text=button_order_accept, callback_data=f'order_accept_{number}')
+    cancel = types.InlineKeyboardButton(text=button_order_cancel, callback_data=f'order_cancel_{number}')
+    result.add(accept, cancel)
     return result
 
 def get_hello_admin_text() -> str:
@@ -339,7 +351,60 @@ def get_order_address_text(address: str = '') -> str:
 Последнй использованный:
 <i>{address}</i>
 '''
+
+def get_ordered_user_text(number: int):
+    '''
+    Текст для отправки пользователю создания заказа
+    '''
+    return f'''
+Заказ №{number} оформлен!
+
+В ближайшее время Вам перезвонит оператор на указанный номер телефона для уточнения деталей заказа
+'''
     
+def get_ordered_notify_text(order_list: map, number: int, address: str, telephone: str):
+    '''
+    Текст для отправки уведомления в группу о принятии заказа
+    '''
+    return f'''
+🟡 Поступил заказ №{number}
+
+Номер телефона: <code>{telephone}</code>
+Адресс доставки: <i>{address}</i>
+
+{format_cart_list(order_list)}
+'''
+
+def get_order_accepted_chat_text(number: int):
+    '''
+    Текст для принятого заказа в чате
+    '''
+    return f'🟢 Заказ №{number} принят в обработку'
+
+def get_order_canceled_chat_text(number: int):
+    '''
+    Текст для принятого заказа в чате
+    '''
+    return f'🔴 Заказ №{number} отменён'
+
+def get_order_accpeted_client_text(number: int):
+    '''
+    Текст для принятого заказа (для клиента)
+    '''
+    return f'''
+Ваш заказ №{number} принят!
+
+🚙 Ожидайте доставки и приятного аппетита!
+'''
+
+def get_order_canceled_client_text(number: int):
+    '''
+    Текст для отмененного заказа (для клиента)
+    '''
+    return f'''
+Ваш заказ №{number} отменен по согласованию с оператором
+'''
+
 def format_menu_list_full(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню, со знаком скрытости
@@ -429,17 +494,44 @@ def format_cart_list(cart: map) -> str:
             items = [db.get_item(ids[0]), db.get_item(ids[1])]
             cost = (items[0].price + items[1].price) * count
             summary += cost
-            counter += 1
             result += f'{counter}. <b>{items[0].name} с {items[1].name}</b> ({items[0].price + items[1].price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
+            counter += 1
         else:
             item = db.get_item(id_temp)
             cost = item.price * count
             summary += cost
-            counter += 1
             result += f'{counter}. <b>{item.name}</b> ({item.price} руб.) x <b>{count}</b> = {cost} руб.\n\n'
+            counter += 1
     result += f'Общая сумма заказа: {summary} руб.'
     return result
 
+def format_cart_list_check(cart: map) -> str:
+    '''
+    Возвращает список товаров из корзины без форматирования для занесения в базу данных
+    '''
+    if len(cart) == 0:
+        return 'Корзина пуста'
+
+    result = ''
+    counter = 1
+    summary = 0
+    for id, count in cart.items():
+        id_temp = str(id)
+        if '+' in id_temp:
+            ids = id_temp.split('+')
+            items = [db.get_item(ids[0]), db.get_item(ids[1])]
+            cost = (items[0].price + items[1].price) * count
+            summary += cost
+            result += f'{counter}. {items[0].name} с {items[1].name} ({items[0].price + items[1].price} руб.) x {count} = {cost} руб.\n'
+            counter += 1
+        else:
+            item = db.get_item(id_temp)
+            cost = item.price * count
+            summary += cost
+            result += f'{counter}. {item.name} ({item.price} руб.) x {count} = {cost} руб.\n'
+            counter += 1
+    result += f'Общая сумма заказа: {summary} руб.'
+    return result
 
 def get_id_from_name(menu: list, name: str) -> int:
     '''

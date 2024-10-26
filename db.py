@@ -3,20 +3,27 @@ from datetime import date, datetime
 
 FILE_DB='orders.db'
 
+'''
+Статусы заказов:
+0 - Только что создан
+1 - Принят
+2 - Отменён
+'''
+
 class Food:
     '''
     Категории:
     1 - Первое блюдо
-    2 - Второе блюдо
-    3 - Салат
-    4 - Напиток
+    2 - Гарнир
+    3 - Мясное
+    4 - Салат
+    5 - Напиток
     '''
     id = -1
     category = 0
     name = ''
     price = 0
     visibility = 0
-
 
 def check_database() -> None:
     '''
@@ -25,7 +32,7 @@ def check_database() -> None:
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
-                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT)''')
+                (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT, status INTEGER DEFAULT 0)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT UNIQUE, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
     con.commit()
@@ -196,3 +203,63 @@ def get_address_from_last_order(user_id: int) -> str:
 
     if value is None: return ''
     else: return value[1]
+
+def order_add(user_id: int, telephone: str, address: str, order_list: str, date: datetime = datetime.now()) -> int:
+    '''
+    Добавляет запись с заказом в базу данных
+    Возвращает номер созданного заказа
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''INSERT INTO `order` (user_id, date, telephone, address, order_list) 
+                VALUES ("{user_id}", "{date.strftime("%d.%m.%Y %H:%M:%S")}", "{telephone}", "{address}", "{order_list}")''')
+    con.commit()
+    
+    cur.execute(f'''SELECT id 
+                    FROM`order` 
+                    WHERE user_id = {user_id} 
+                    ORDER BY id DESC;''')
+    return int(cur.fetchone()[0])
+
+def order_get_user_id(id: int) -> int:
+    '''
+    По номеру заказа возвращает id клиента
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT user_id FROM `order` 
+                    WHERE id = {id};''')
+    value = cur.fetchone()
+
+    if value is None: return 0
+    else: return value[0]
+
+def order_change_status(id: int, status: int) -> None:
+    '''
+    Меняет статус заказа
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()    
+    cur.execute(f'''UPDATE `order`
+                SET status = {status}
+                WHERE id = {id};''')
+    con.commit()
+
+def order_accept(id: int) -> int:
+    '''
+    Делает отметку в БД, что заказ принят
+    Возвращает id клиента
+    '''
+    order_change_status(id, 1)
+    return order_get_user_id(id)
+    
+def order_cancel(id: int) -> int:
+    '''
+    Делает отметку в БД, что заказ отменен
+    Возвращает id клиента
+    '''
+    order_change_status(id, 2)
+    return order_get_user_id(id)
+    
+
+    

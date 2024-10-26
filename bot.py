@@ -9,6 +9,7 @@ import format
 
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
 admin = config.ADMIN_CHAT_ID
+orders_chat = config.ORDERS_CHAT_ID
 
 # Корзины пользователей
 carts = {}
@@ -26,8 +27,7 @@ def hello_message_command(message):
         # Приветствие пользователя
         now = datetime.datetime.now()
         bot.send_message(message.chat.id, 
-                    format.get_hello_client_text(), 
-                    reply_markup=format.get_hello_client_keyboard())
+                    format.get_hello_client_text(), reply_markup=format.get_hello_client_keyboard())
         if (now.time().hour > 11):
             bot.send_message(message.chat.id, 
                     format.get_hello_client_late_text())
@@ -157,6 +157,36 @@ def get_callback(callback):
                         reply_markup=format.get_cart_edit_keyboard(carts[callback.message.chat.id])
                         )
                     cart_message_id[callback.message.chat.id] = msg.id
+        case 'order':
+            # Принятие заказа оператором
+            match call[1]:
+                case 'accept':
+                    client = db.order_accept(int(call[2]))
+                    bot.send_message(orders_chat, format.get_order_accepted_chat_text(call[2]))
+                    bot.edit_message_reply_markup(callback.message.chat.id, 
+                                                  callback.message.id, 
+                                                  reply_markup=None)
+                    bot.edit_message_text(callback.message.text.replace('🟡', '🟢'), 
+                                          callback.message.chat.id, 
+                                          callback.message.id)
+                    
+                    bot.send_message(client,
+                                     format.get_order_accpeted_client_text(call[2]),
+                                     reply_markup=format.get_hello_client_keyboard())
+                    bot.send_sticker(client, 'CAACAgIAAxkBAAENBLxnHRKLdtGhrw1Us1bOPSq8Ohlo_wACHwADDbbSGVMMqpEYFo4gNgQ')
+                case 'cancel':
+                    client = db.order_cancel(int(call[2]))
+                    bot.send_message(orders_chat, format.get_order_canceled_chat_text(call[2]))
+                    bot.edit_message_reply_markup(callback.message.chat.id, 
+                                                  callback.message.id, 
+                                                  reply_markup=None)
+                    bot.edit_message_text(callback.message.text.replace('🟡', '🔴'), 
+                                          callback.message.chat.id, 
+                                          callback.message.id)
+                    
+                    bot.send_message(client, 
+                                     format.get_order_canceled_client_text(call[2]),
+                                     reply_markup=format.get_hello_client_keyboard())
 
 
 # Секция добавления элемента в меню
@@ -770,10 +800,25 @@ def make_order_step3(message, telephone):
         message.text = format.button_ok
         make_order_step1(message)
         return
+    if '\"' in message.text or '\'' in message.text:
+        bot.send_message(message.chat.id, 'Ошибка: некорректный адрес')
+        bot.register_next_step_handler(message, make_order_step3)
+        return
     
-    # Доделать, чтобы сохранял заказ в БД и отправлял сообщение с кнопкой принятия и отмены в чат с заказами
+    number = db.order_add(message.chat.id, 
+                 telephone, 
+                 message.text, 
+                 format.format_cart_list_check(carts[message.chat.id]))
 
-    print(message.chat.id, f'{telephone} <i>{message.text}</i>')
+    bot.send_message(message.chat.id,
+                     format.get_ordered_user_text(number),
+                     reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(orders_chat,
+                     format.get_ordered_notify_text(carts.pop(message.chat.id), 
+                                                    number,
+                                                    message.text,
+                                                    telephone),
+                     reply_markup=format.get_ordered_accept_keyboard(number))
 
 
 bot.infinity_polling()
