@@ -35,6 +35,12 @@ def check_database() -> None:
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT, status INTEGER DEFAULT 0)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT UNIQUE, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
+    
+    # Задание начальных текстов для сообщений
+    cur.execute('''INSERT OR IGNORE INTO `message` (name, text) 
+                   VALUES ('HELLO_TEXT', "👋 Здравствуйте, вас приветсвтует Пищепром!
+📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐")''')
+    
     con.commit()
 
 def menu_get_list_nice() -> list:
@@ -261,5 +267,40 @@ def order_cancel(id: int) -> int:
     order_change_status(id, 2)
     return order_get_user_id(id)
     
+def message_get(name: str) -> str:
+    '''
+    Выгружает из БД текст сообщения
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT text
+                    FROM `message` 
+                    WHERE name = "{name}";''')
+    value = cur.fetchone()
 
-    
+    if value is None: return ''
+    else: return value[0]
+
+def message_set(name: str, value: str):
+    '''
+    Задает новое значение для сообщения
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''UPDATE `message`
+                    SET text = "{value}"
+                    WHERE name = "{name}";''')
+    con.commit()
+
+def get_message_hello_text() -> str:
+    '''
+    Получение сообщения приветствия пользователя
+    '''
+    return message_get('HELLO_TEXT')
+
+def set_message_hello_text(value: str):
+    '''
+    Установка сообщения приветствия пользователя
+    '''
+    message_set('HELLO_TEXT', value)
+

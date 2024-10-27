@@ -12,6 +12,7 @@ category_5 = '🧃 Напитки'
 button_ok = 'Ок'
 button_back = '↩️ Назад'
 
+button_hello_text = 'Приветствие'
 button_menu_nice = 'Меню дня'
 button_menu_full = 'Полный перечень'
 button_menu_hidden = 'Скрыть'
@@ -35,7 +36,9 @@ def get_hello_admin_keyboard() -> types.ReplyKeyboardMarkup:
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu_nice = types.KeyboardButton(text=button_menu_nice)
     menu_full = types.KeyboardButton(text=button_menu_full)
+    hello_text = types.KeyboardButton(text=button_hello_text)
     result.add(menu_nice, menu_full)
+    result.add(hello_text)
     return result
 
 def get_hello_client_keyboard() -> types.ReplyKeyboardMarkup:
@@ -263,8 +266,10 @@ def get_ordered_accept_keyboard(number: int) -> types.InlineKeyboardMarkup:
     Клавиатура для принятия или отмены заказа оператором
     '''
     result = types.InlineKeyboardMarkup()
-    accept = types.InlineKeyboardButton(text=button_order_accept, callback_data=f'order_accept_{number}')
-    cancel = types.InlineKeyboardButton(text=button_order_cancel, callback_data=f'order_cancel_{number}')
+    accept = types.InlineKeyboardButton(text=button_order_accept, 
+                                        callback_data=f'order_accept_{number}')
+    cancel = types.InlineKeyboardButton(text=button_order_cancel, 
+                                        callback_data=f'order_cancel_{number}')
     result.add(accept, cancel)
     return result
 
@@ -275,15 +280,14 @@ def get_hello_admin_text() -> str:
     return f'''
 <code>{button_menu_nice}</code> - список меню, как он отображается клиенту
 <code>{button_menu_full}</code> - полное меню
+<code>{button_hello_text}</code> - редактирование приветствия бота
 '''
 
 def get_hello_client_text() -> str:
     '''
     Текст приветствия пользователя
     '''
-    return '''
-👋 Здравствуйте, вас приветсвтует Пищепром!
-📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐'''
+    return db.get_message_hello_text()
 
 def get_hello_client_late_text() -> str:
     '''
@@ -403,6 +407,19 @@ def get_order_canceled_client_text(number: int):
     '''
     return f'''
 Ваш заказ №{number} отменен по согласованию с оператором
+'''
+
+def get_message_hello_edit() -> str:
+    '''
+    Текст для просмотра сообщения приветствия
+    '''
+    return f'''
+Текст приветствия клиента:
+
+{get_hello_client_text()}
+
+Для установки нового текста отправьте новую версию в ответ на это сообщение.
+Нажмите <code>{button_ok}</code> для выхода 
 '''
 
 def format_menu_list_full(menu: db.Food) -> str:

@@ -72,18 +72,26 @@ def get_all_mesasge(message):
     else:
         # Обрабтка сообщений главного меню администратора
         match message.text:
+            # Вывод меню (полностью)
             case format.button_menu_full:
                 menu = db.menu_get_list()
                 if len(menu) == 0:
                     bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
                 else:
                     bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_edit_keyboard())
+            # Вывод меню (как для клиента)
             case format.button_menu_nice:
                 menu = db.menu_get_list_nice()
                 if len(menu) == 0:
                     bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
                 else:
                     bot.send_message(message.chat.id, format.format_menu_list_nice(menu), reply_markup=format.get_menu_edit_keyboard())
+            # Редактирование текста приветствия клиента
+            case format.button_hello_text:
+                msg = bot.send_message(message.chat.id, 
+                                 format.get_message_hello_edit(),
+                                 reply_markup=format.get_ok_keyboard())
+                bot.register_next_step_handler(msg, set_hello_message)
             case _:
             # Приветствие администратора
                 bot.send_message(message.chat.id, 
@@ -427,6 +435,28 @@ def menu_delete_item_step3(message, menu):
 
     db.menu_delete_item(food.id)
     bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+
+# Функция задания нового приветствия для клиента
+
+def set_hello_message(message):
+    '''
+    Установка нового приветствия для пользователя
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.register_next_step_handler(message, set_hello_message)
+        return
+    if message.text == format.button_ok:
+        get_all_mesasge(message)
+        return
+    
+    db.set_message_hello_text(message.text)
+
+    bot.send_message(message.chat.id, 'Новый текст сообщения установлен!')
+    msg = bot.send_message(message.chat.id, 
+                                 format.get_message_hello_edit(),
+                                 reply_markup=format.get_ok_keyboard())
+    bot.register_next_step_handler(msg, set_hello_message)
 
 # Секция создания заказа
 
