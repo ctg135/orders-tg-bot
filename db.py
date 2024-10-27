@@ -29,12 +29,17 @@ def check_database() -> None:
     '''
     Проверяет на наличие базу данных. В случае отсутствия создает новую пустую
     '''
+    
     con = sqlite3.connect(FILE_DB)
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT, status INTEGER DEFAULT 0)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS `menu` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `category` INTEGER, `name` TEXT UNIQUE, `price` INTEGER, `visibility` INTEGER DEFAULT 1)''')
+    cur.execute('''CREATE TABLE  IF NOT EXISTS `message` 
+                (`name` TEXT PRIMARY KEY, `text` TEXT NOT NULL)''')
+    cur.execute('''CREATE TABLE IF NOT EXISTS`admin`
+                (`id` INTEGER PRIMARY KEY, `name` TEXT NOT NULL)''')
     
     # Задание начальных текстов для сообщений
     cur.execute('''INSERT OR IGNORE INTO `message` (name, text) 
@@ -42,6 +47,36 @@ def check_database() -> None:
 📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐")''')
     
     con.commit()
+
+def add_admin(id: int, name: str) -> None:
+    '''
+    Устанавливает нового администратора
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''INSERT INTO `admin` (id, name) 
+                VALUES ({id}, "{name}")''')
+    con.commit()
+
+def delete_admin(id: int) -> None:
+    '''
+    Удаляет администратора
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''DELETE FROM `admin`
+                    WHERE id = {id}''')
+    con.commit()
+
+def get_admins() -> list:
+    '''
+    Выгружает список администраторов из базы данных
+    '''
+    con = sqlite3.connect(FILE_DB)
+    cur = con.cursor()
+    cur.execute(f'''SELECT id, name FROM `admin`''')
+    return cur.fetchall()
+
 
 def menu_get_list_nice() -> list:
     '''

@@ -15,6 +15,7 @@ button_back = '↩️ Назад'
 button_hello_text = 'Приветствие'
 button_menu_nice = 'Меню дня'
 button_menu_full = 'Полный перечень'
+button_admins = 'Администраторы'
 button_menu_hidden = 'Скрыть'
 button_menu_visible = 'Указать'
 button_order_accept = '✅ Принять'
@@ -37,8 +38,9 @@ def get_hello_admin_keyboard() -> types.ReplyKeyboardMarkup:
     menu_nice = types.KeyboardButton(text=button_menu_nice)
     menu_full = types.KeyboardButton(text=button_menu_full)
     hello_text = types.KeyboardButton(text=button_hello_text)
+    admins = types.KeyboardButton(text=button_admins)
     result.add(menu_nice, menu_full)
-    result.add(hello_text)
+    result.add(hello_text, admins)
     return result
 
 def get_hello_client_keyboard() -> types.ReplyKeyboardMarkup:
@@ -50,7 +52,7 @@ def get_hello_client_keyboard() -> types.ReplyKeyboardMarkup:
     result.add(menu)
     return result
 
-def get_menu_add_keyboard() -> types.ReplyKeyboardMarkup:
+def get_menu_add_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для пустого меню
     '''
@@ -59,7 +61,7 @@ def get_menu_add_keyboard() -> types.ReplyKeyboardMarkup:
     result.add(add)
     return result
 
-def get_menu_edit_keyboard() -> types.ReplyKeyboardMarkup:
+def get_menu_edit_keyboard() -> types.InlineKeyboardMarkup:
     '''
     Клавиатура для редактирования меню
     '''
@@ -148,8 +150,17 @@ def get_ok_keyboard() -> types.ReplyKeyboardMarkup:
     Клавиатура с надписью Ок
     '''
     result = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    ok = types.KeyboardButton(text='Ок')
+    ok = types.KeyboardButton(text=button_ok)
     result.add(ok)
+    return result
+
+def get_back_keyboard() -> types.ReplyKeyboardMarkup:
+    '''
+    Клавиатура с надписью Назад
+    '''
+    result = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    back = types.KeyboardButton(text=button_back)
+    result.add(back)
     return result
 
 def get_order_start_keyboard() -> types.ReplyKeyboardMarkup:
@@ -273,6 +284,23 @@ def get_ordered_accept_keyboard(number: int) -> types.InlineKeyboardMarkup:
     result.add(accept, cancel)
     return result
 
+def get_admin_list_edit_keyboard() -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для изменения списка администраторов
+    '''
+    result = types.InlineKeyboardMarkup()
+    add_admin = types.InlineKeyboardButton(text='➕ Добавить', 
+                                     callback_data='admin_add')
+    result.add(add_admin)
+
+    admins = db.get_admins()
+    for admin in admins:
+        admin_option = types.InlineKeyboardButton(text=f'{admin[1]} ❌', 
+                                        callback_data=f'admin_delete_{admin[0]}')
+        result.add(admin_option)
+    return result
+    
+
 def get_hello_admin_text() -> str:
     '''
     Текст для справки администратору
@@ -281,6 +309,7 @@ def get_hello_admin_text() -> str:
 <code>{button_menu_nice}</code> - список меню, как он отображается клиенту
 <code>{button_menu_full}</code> - полное меню
 <code>{button_hello_text}</code> - редактирование приветствия бота
+<code>{button_admins}</code> - список администраторов бота
 '''
 
 def get_hello_client_text() -> str:
@@ -431,6 +460,30 @@ def get_access_restricted_text() -> str:
 
 Попробуйте обратиться позднее
 '''
+
+def get_admin_list_text() -> str:
+    '''
+    Текст для списка администратров
+    '''
+    return 'Список администраторов'
+
+def get_admin_name() -> str:
+    '''
+    Текст запроса имени администратора
+    '''
+    return f'''Напишите имя нового администратора
+    
+или нажмите кнопку <code>{button_back}</code> для отмены'''
+
+def get_admin_id() -> str:
+    '''
+    Текст запроса id администратора
+    '''
+    return f'''Напишите <b>id Telegram профиля</b> администратора
+
+Чтобы его узнать, <b>целевой</b> пользователь должен написать боту <b>IDBot</b> @myidbot в личные сообщения команду <code>/getid</code>
+
+Для отмены создания нажмите на кнопку <code>{button_back}</code>'''
 
 def format_menu_list_full(menu: db.Food) -> str:
     '''

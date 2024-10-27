@@ -10,8 +10,8 @@ import format
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
 
 # Определение глобальных переменных
-admin = config.ADMIN_CHAT_ID
 orders_chat = config.ORDERS_CHAT_ID
+admin = config.ADMIN_CHAT_ID
 
 # Корзины пользователей
 carts = {}
@@ -19,6 +19,18 @@ carts = {}
 cart_message_id = {}
 # Проверка базы данных
 db.check_database()
+
+def load_admins():
+    '''
+    Обновляет список администраторов бота
+    '''
+    global admin
+    admin = config.ADMIN_CHAT_ID
+    admins = db.get_admins()
+    for item in admins:
+        admin.append(item[0])
+
+load_admins()
 
 def check_access_time() -> bool:
     '''
@@ -113,6 +125,11 @@ def get_all_mesasge(message):
                                  format.get_message_hello_edit(),
                                  reply_markup=format.get_ok_keyboard())
                 bot.register_next_step_handler(msg, set_hello_message)
+            # Редактирование списка администраторов
+            case format.button_admins:
+                bot.send_message(message.chat.id, 
+                                 format.get_admin_list_text(),
+                                 reply_markup=format.get_admin_list_edit_keyboard())
             case _:
             # Приветствие администратора
                 bot.send_message(message.chat.id, 
@@ -218,6 +235,24 @@ def get_callback(callback: types.CallbackQuery):
                     bot.send_message(client, 
                                      format.get_order_canceled_client_text(call[2]),
                                      reply_markup=format.get_hello_client_keyboard())
+        case 'admin':
+            bot.delete_message(callback.message.chat.id, 
+                               callback.message.id)
+            # Редактирование списка администраторов
+            match call[1]:
+                case 'add':
+                    msg = bot.send_message(callback.message.chat.id,
+                                           format.get_admin_name(), 
+                                           reply_markup=format.get_back_keyboard())
+                    bot.register_next_step_handler(callback.message,
+                                                   add_admin_step1)
+                case 'delete':
+                    db.delete_admin(call[2])
+                    bot.send_message(callback.message.chat.id, 'Удалено!')
+                    bot.send_message(callback.message.chat.id, 
+                                 format.get_admin_list_text(),
+                                 reply_markup=format.get_admin_list_edit_keyboard())
+                    load_admins()
 
 
 # Секция добавления элемента в меню
@@ -480,6 +515,57 @@ def set_hello_message(message):
                                  format.get_message_hello_edit(),
                                  reply_markup=format.get_ok_keyboard())
     bot.register_next_step_handler(msg, set_hello_message)
+
+# Секция добавления администратора 
+
+def add_admin_step1(message: types.Message) -> None:
+    '''
+    Устанавливает новое имя и запрашивает id администратора
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(add_admin_step1)
+        return
+    
+    if message.text == format.button_back:
+        bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(),
+                     reply_markup=format.get_hello_admin_keyboard())
+        return
+    
+    msg = bot.send_message(message.chat.id, 
+                           format.get_admin_id(), 
+                           reply_markup=format.get_back_keyboard())
+    bot.register_next_step_handler(msg, add_admin_step2, message.text)
+
+def add_admin_step2(message: types.Message, name: str) -> None:
+    '''
+    Устанавливает id нового администратора
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
+        bot.register_next_step_handler(add_admin_step2)
+        return
+
+    if message.text == format.button_back:
+        bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(),
+                     reply_markup=format.get_hello_admin_keyboard())
+        return
+    
+    if not message.text.isdigit():
+        bot.send_message(message.chat.id, 'Ошибка: id пользователя - целое положительно число')
+        bot.register_next_step_handler(add_admin_step2)
+        return
+    
+    db.add_admin(int(message.text), name)
+    bot.send_message(message.chat.id, 'Добавлено!')
+
+    bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(),
+                     reply_markup=format.get_hello_admin_keyboard())
+    load_admins()
+
 
 # Секция создания заказа
 
