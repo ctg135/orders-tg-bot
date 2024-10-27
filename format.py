@@ -422,6 +422,16 @@ def get_message_hello_edit() -> str:
 Нажмите <code>{button_ok}</code> для выхода 
 '''
 
+def get_access_restricted_text() -> str:
+    '''
+    Текст сообщения при блокировке по времени бота
+    '''
+    return '''
+Время для принятия заказов: с 9:00 до 11:00
+
+Попробуйте обратиться позднее
+'''
+
 def format_menu_list_full(menu: db.Food) -> str:
     '''
     Возвращает отформатированный список меню, со знаком скрытости

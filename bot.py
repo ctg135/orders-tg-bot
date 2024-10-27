@@ -8,6 +8,8 @@ import db
 import format
 
 bot = telebot.TeleBot(config.BOT_TOKEN, parse_mode='HTML')
+
+# Определение глобальных переменных
 admin = config.ADMIN_CHAT_ID
 orders_chat = config.ORDERS_CHAT_ID
 
@@ -15,49 +17,71 @@ orders_chat = config.ORDERS_CHAT_ID
 carts = {}
 # Сообщения с корзиной пользователя
 cart_message_id = {}
-
+# Проверка базы данных
 db.check_database()
+
+def check_access_time() -> bool:
+    '''
+    Доступ разрешен в период: с 9:00 до 11:00
+    '''
+    now = datetime.datetime.now()
+    current_hour = now.hour
+    current_minute = now.minute
+
+    if 9 <= current_hour <= 11 and current_minute < 60: return True
+    else: return False
+
+def check_access_message(message: types.Message) -> bool:
+    '''
+    Функция проверки досутпа к сообщениям бота
+    Необходима для блокировки бота в нерабочее время
+    '''
+    access = check_access_time()
+    if access: return access
+    bot.send_message(message.chat.id, 
+                     format.get_access_restricted_text(),
+                     reply_markup=format.get_ok_keyboard())
+    return access
+
+def check_access_callback(callback: types.CallbackQuery) -> bool:
+    '''
+    Функция проверки досутпа к callback кнопкам бота
+    Необходима для блокировки бота в нерабочее время
+    '''
+    access = check_access_time()
+    if access: return
+    bot.delete_message(callback.message.chat.id, callback.message.id)
+    bot.send_message(callback.message.chat.id, 
+                     format.get_access_restricted_text(),
+                     reply_markup=format.get_ok_keyboard())
+    return access
 
 @bot.message_handler(commands=['start', 'старт', 'начало'])
 def hello_message_command(message):
     '''
     Сообщение приветствия
     '''
+    if message.chat.id < 0:  return
     if message.chat.id not in admin:
         # Приветствие пользователя
-        now = datetime.datetime.now()
+        if not check_access_message(message):  return
         bot.send_message(message.chat.id, 
-                    format.get_hello_client_text(), reply_markup=format.get_hello_client_keyboard())
-        if (now.time().hour > 11):
-            bot.send_message(message.chat.id, 
-                    format.get_hello_client_late_text())
+                    format.get_hello_client_text(), 
+                    reply_markup=format.get_hello_client_keyboard())
     else:
         # Приветствие администратора
         bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
                      reply_markup=format.get_hello_admin_keyboard())
 
-@bot.message_handler(commands=['menu', 'меню'])
-def list_menu(message):
-    '''
-    Выводит список меню администратору для редактирования
-    '''
-    if message.chat.id not in admin:
-        return
-    
-    menu = db.menu_get_list()
-
-    if len(menu) == 0:
-        bot.send_message(message.chat.id, 'Сейчас тут пусто', reply_markup=format.get_menu_add_keyboard())
-    else:
-        bot.send_message(message.chat.id, format.format_menu_list_full(menu), reply_markup=format.get_menu_edit_keyboard())
-
 @bot.message_handler(content_types=['text'])
 def get_all_mesasge(message):
     '''
     Текстовые сообщения
     '''
+    if message.chat.id < 0:  return
     if message.chat.id not in admin:
+        if not check_access_message(message):  return
         match message.text:
             case format.button_init_order:
                 start_order(message)
@@ -66,9 +90,6 @@ def get_all_mesasge(message):
                 bot.send_message(message.chat.id, 
                     format.get_hello_client_text(), 
                     reply_markup=format.get_hello_client_keyboard())
-                if datetime.datetime.now().time().hour >= 11:
-                    bot.send_message(message.chat.id, 
-                        format.get_hello_client_late_text())
     else:
         # Обрабтка сообщений главного меню администратора
         match message.text:
@@ -99,7 +120,9 @@ def get_all_mesasge(message):
                                 reply_markup=format.get_hello_admin_keyboard())
 
 @bot.callback_query_handler(func=lambda call: True)
-def get_callback(callback):
+def get_callback(callback: types.CallbackQuery):
+    if callback.message.chat.id not in admin:
+        if not check_access_callback(callback):  return
     match callback.data:
         # Добавление нового блюда
         case 'menu_add':
@@ -464,6 +487,7 @@ def start_order(message):
     '''
     Инициация создания заказа
     '''
+    if not check_access_message(message):  return
     msg = bot.send_message(message.chat.id, 'Что выберете?', reply_markup=format.get_order_start_keyboard())
     bot.register_next_step_handler(msg, start_order_step2)
 
@@ -471,6 +495,7 @@ def start_order_step2(message):
     '''
     Обработка кнопок меню пользователя
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
@@ -506,6 +531,7 @@ def order_food_simple_step1(message, category):
     Функция для добавления в заказ простых блюд
     Выгружает выбранную категории и показывает выбор пользователю
     '''
+    if not check_access_message(message):  return
     menu = db.menu_get_list_category_nice(category)
     msg = bot.send_message(message.chat.id, 
                      format.format_menu_list_nice(menu),
@@ -516,6 +542,7 @@ def order_food_simple_step2(message, menu, category):
     '''
     Проверяет введенное название и предлагает выбрать количество
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
@@ -535,6 +562,7 @@ def order_food_simple_step3(message, id, category):
     '''
     Проверка введенного числа и добавление в корзину
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         bot.register_next_step_handler(message, order_food_simple_step3, id, category)
@@ -573,6 +601,7 @@ def order_food_complex_step1(message, category):
     Функция для добавления в заказ сложных блюд
     Выгружает первую часть подкатегории позиции (гарнир)
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
@@ -600,6 +629,7 @@ def order_food_complex_step2(message, menu, category):
     '''
     Установка первой выбранной части и предложение второй
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
@@ -635,6 +665,7 @@ def order_food_complex_step3(message, menu, category, first_id):
     '''
     Установка второй части и предложение количества
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         order_food_complex_step1(message)
@@ -657,6 +688,7 @@ def order_food_complex_step4(message, menu, category, first_id, second_id):
     '''
     Установка количества
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         bot.register_next_step_handler(message, order_food_complex_step4, id, category)
@@ -702,6 +734,7 @@ def cart_edit_step1(message):
         Товар - [delete]
         [+] [-] [Количество]
     '''
+    if not check_access_message(message):  return
     global carts
     msg = bot.send_message(message.chat.id, 
                            format.get_cart_help_text(), 
@@ -717,6 +750,7 @@ def cart_edit_step2(message):
     '''
     Обработка текстовых кнопок пользователя в меню корзины
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         bot.register_next_step_handler(msg, cart_edit_step2)
@@ -749,6 +783,7 @@ def make_order(message):
     Адрес доставки (если нету в базе)
     И отправляем в чат для заказов предложение принять/отменить
     '''
+    if not check_access_message(message):  return
     global carts
     if message.chat.id not in carts.keys() or carts[message.chat.id] == {}:
         msg = bot.send_message(message.chat.id, format.get_cart_empty_text())
@@ -771,6 +806,7 @@ def make_order_step1(message):
     Подтверждает выбор пользователя и предлагает номер телефона
     Также предлагает ввести старый номер телефона
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         start_order(message)
@@ -795,6 +831,7 @@ def make_order_step2(message):
     Получает номер телефона и предлагает ввести адрес
     Также предлагает ввести адрес из предыдущего заказа
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         bot.register_next_step_handler(message, make_order_step2)
@@ -822,6 +859,7 @@ def make_order_step3(message, telephone):
     '''
     Получает адрес и отправляет сообщение в группу
     '''
+    if not check_access_message(message):  return
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
         bot.register_next_step_handler(message, make_order_step3)
