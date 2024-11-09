@@ -36,6 +36,7 @@ def check_access_time() -> bool:
     '''
     Доступ разрешен в период: с 9:00 до 11:00
     '''
+    return True
     now = datetime.datetime.now()
     current_hour = now.hour
     current_minute = now.minute
@@ -138,8 +139,8 @@ def get_all_mesasge(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def get_callback(callback: types.CallbackQuery):
-    if callback.message.chat.id not in admin:
-        if not check_access_callback(callback):  return
+    # if not check_access_callback(callback):  return
+    
     match callback.data:
         # Добавление нового блюда
         case 'menu_add':
@@ -154,6 +155,7 @@ def get_callback(callback: types.CallbackQuery):
             menu_delete_item_step1(callback)
             return
     call = callback.data.split('_')
+    print (call)
     match call[0]:
         # Редактирование корзины
         case 'cart':
