@@ -5,9 +5,10 @@ import db
 
 category_1 = '🍲 Первые блюда'
 category_2 = '🍝 Гарниры'
-category_3 = '🍖 Мясное'
+category_3 = '🍖 Вторые блюда'
 category_4 = '🥗 Салаты'
 category_5 = '🧃 Напитки'
+category_6 = '🍞 Выпечка'
 
 button_ok = 'Ок'
 button_back = '↩️ Назад'
@@ -25,10 +26,7 @@ button_init_order = '📖 Сделать заказ'
 button_make_order = '✅ Заказ собран'
 button_cart = 'Корзина'
 button_cart_clear = 'Очистить корзину'
-button_category_1 = '🍲 Первые блюда'
-button_category_2 = '🍝 Вторые блюда'
-button_category_3 = '🥗 Салаты'
-button_category_4 = '🧃 Напитки'
+
 
 def get_hello_admin_keyboard() -> types.ReplyKeyboardMarkup:
     '''
@@ -81,11 +79,11 @@ def get_menu_category_keyboard() -> types.ReplyKeyboardMarkup:
     cat_2 = types.KeyboardButton(text=category_2)
     cat_3 = types.KeyboardButton(text=category_3)
     cat_4 = types.KeyboardButton(text=category_4)
-    cat_5 = types.KeyboardButton(text=category_5)
+    cat_6 = types.KeyboardButton(text=category_6)
     back = types.KeyboardButton(text=button_back)
     result.add(cat_1, cat_2)
     result.add(cat_3, cat_4)
-    result.add(cat_5, back)
+    result.add(cat_6, back)
     return result
 
 def get_menu_id_category_keyboard(menu: list) -> types.ReplyKeyboardMarkup:
@@ -171,14 +169,15 @@ def get_order_start_keyboard() -> types.ReplyKeyboardMarkup:
     basket = types.KeyboardButton(text=button_cart)
     make_order = types.KeyboardButton(text=button_make_order)
     back = types.KeyboardButton(text=button_back)
-    cat_1 = types.KeyboardButton(text=button_category_1)
-    cat_2 = types.KeyboardButton(text=button_category_2)
-    cat_3 = types.KeyboardButton(text=button_category_3)
-    cat_4 = types.KeyboardButton(text=button_category_4)
+    cat_1 = types.KeyboardButton(text=category_1)
+    cat_2 = types.KeyboardButton(text=category_2)
+    cat_3 = types.KeyboardButton(text=category_3)
+    cat_4 = types.KeyboardButton(text=category_4)
+    cat_6 = types.KeyboardButton(text=category_6)
     result.add(basket, make_order)
-    result.add(cat_1, cat_2)
-    result.add(cat_3, cat_4)
-    result.add(back)
+    result.add(cat_1, cat_3)
+    result.add(cat_2, cat_4)
+    result.add(cat_6, back)
     return result
 
 def get_cart_keyboard() -> types.ReplyKeyboardMarkup:

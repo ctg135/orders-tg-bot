@@ -1,7 +1,8 @@
 import sqlite3
 from datetime import date, datetime
+from config import FILE_DB
 
-FILE_DB='orders.db'
+DB = FILE_DB
 
 '''
 Статусы заказов:
@@ -30,7 +31,7 @@ def check_database() -> None:
     Проверяет на наличие базу данных. В случае отсутствия создает новую пустую
     '''
     
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS `order` 
                 (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `user_id` TEXT, `date` date, `telephone` TEXT, `address` TEXT, `order_list` TEXT, status INTEGER DEFAULT 0)''')
@@ -52,7 +53,7 @@ def add_admin(id: int, name: str) -> None:
     '''
     Устанавливает нового администратора
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''INSERT INTO `admin` (id, name) 
                 VALUES ({id}, "{name}")''')
@@ -62,7 +63,7 @@ def delete_admin(id: int) -> None:
     '''
     Удаляет администратора
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''DELETE FROM `admin`
                     WHERE id = {id}''')
@@ -72,7 +73,7 @@ def get_admins() -> list:
     '''
     Выгружает список администраторов из базы данных
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT id, name FROM `admin`''')
     return cur.fetchall()
@@ -83,7 +84,7 @@ def menu_get_list_nice() -> list:
     Выгружает из базы данных список всех блюд, без скрытых
     '''
     result = []
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute('''SELECT id, category, name, price
                 FROM menu 
@@ -104,7 +105,7 @@ def menu_get_list() -> list:
     Выгружает из базы данных список всех блюд
     '''
     result = []
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute('''SELECT id, category, name, price, visibility
                 FROM menu 
@@ -124,7 +125,7 @@ def menu_get_list_category(category: int) -> list:
     '''
     Получает список блюд из меню по одной категории
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT * FROM menu 
                     WHERE category = {category} 
@@ -145,7 +146,7 @@ def menu_get_list_category_nice(category: int) -> list:
     '''
     Получает список блюд из меню по одной категории, без скрытых
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT * FROM menu 
                     WHERE category = {category} AND visibility = 1
@@ -168,7 +169,7 @@ def menu_add_item(i: Food) -> None:
     Добавляет запись с новым блюдом
     # TODO добавить проверку на совпадение имени
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''INSERT INTO menu (category, name, price) 
                 VALUES ({i.category}, "{i.name}", {i.price})''')
@@ -178,7 +179,7 @@ def menu_edit_item(id: int, new: Food) -> None:
     '''
     Установка новых значений для поля
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''UPDATE menu
                 SET name = '{new.name}', price = {new.price}, visibility = {new.visibility}
@@ -189,7 +190,7 @@ def menu_delete_item(id: int) -> None:
     '''
     Удаление элемента по id
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''DELETE FROM menu WHERE id = {id};''')
     con.commit()
@@ -199,7 +200,7 @@ def get_item(id) -> Food:
     Получение одного элемента из БД
     В случае отсутствия возвращает пустой элемент
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT * FROM menu 
                     WHERE id = {id};''')
@@ -221,7 +222,7 @@ def get_telephone_from_last_order(user_id: int) -> str:
     '''
     Возвращает последний использованный номер телефона
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT id, telephone FROM `order` 
                     WHERE user_id = {user_id} 
@@ -235,7 +236,7 @@ def get_address_from_last_order(user_id: int) -> str:
     '''
     Возвращает последний использованный адрес
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT id, address FROM `order` 
                     WHERE user_id = {user_id} 
@@ -250,7 +251,7 @@ def order_add(user_id: int, telephone: str, address: str, order_list: str, date:
     Добавляет запись с заказом в базу данных
     Возвращает номер созданного заказа
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''INSERT INTO `order` (user_id, date, telephone, address, order_list) 
                 VALUES ("{user_id}", "{date.strftime("%d.%m.%Y %H:%M:%S")}", "{telephone}", "{address}", "{order_list}")''')
@@ -266,7 +267,7 @@ def order_get_user_id(id: int) -> int:
     '''
     По номеру заказа возвращает id клиента
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT user_id FROM `order` 
                     WHERE id = {id};''')
@@ -279,7 +280,7 @@ def order_change_status(id: int, status: int) -> None:
     '''
     Меняет статус заказа
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()    
     cur.execute(f'''UPDATE `order`
                 SET status = {status}
@@ -306,7 +307,7 @@ def message_get(name: str) -> str:
     '''
     Выгружает из БД текст сообщения
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''SELECT text
                     FROM `message` 
@@ -320,7 +321,7 @@ def message_set(name: str, value: str):
     '''
     Задает новое значение для сообщения
     '''
-    con = sqlite3.connect(FILE_DB)
+    con = sqlite3.connect(DB)
     cur = con.cursor()
     cur.execute(f'''UPDATE `message`
                     SET text = "{value}"

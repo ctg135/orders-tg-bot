@@ -155,7 +155,6 @@ def get_callback(callback: types.CallbackQuery):
             menu_delete_item_step1(callback)
             return
     call = callback.data.split('_')
-    print (call)
     match call[0]:
         # Редактирование корзины
         case 'cart':
@@ -598,14 +597,16 @@ def start_order_step2(message):
             if message.chat.id in carts.keys():
                 carts.pop(message.chat.id)
             hello_message_command(message)
-        case format.button_category_1:
+        case format.category_1:
             order_food_simple_step1(message, 1)
-        case format.button_category_2:
-            order_food_complex_step1(message, 2)
-        case format.button_category_3:
+        case format.category_2:
+            order_food_simple_step1(message, 2)
+        case format.category_3:
+            order_food_simple_step1(message, 3)
+        case format.category_4:
             order_food_simple_step1(message, 4)
-        case format.button_category_4:
-            order_food_simple_step1(message, 5)
+        case format.category_6:
+            order_food_simple_step1(message, 6)
         case format.button_cart:
             cart_edit_step1(message)
         case format.button_make_order:
