@@ -262,7 +262,9 @@ def menu_add_item_step1(callback):
     '''
     Определение категории для добавления
     '''
-    msg = bot.send_message(callback.message.chat.id, 'Выберите категорию блюда', reply_markup=format.get_menu_category_keyboard())
+    msg = bot.send_message(callback.message.chat.id, 
+                           'Выберите категорию блюда', 
+                           reply_markup=format.get_menu_category_keyboard())
     bot.register_next_step_handler(msg, menu_add_item_step2)
 
 def menu_add_item_step2(message):
@@ -280,7 +282,7 @@ def menu_add_item_step2(message):
         case format.category_2: add_item.category = 2
         case format.category_3: add_item.category = 3
         case format.category_4: add_item.category = 4
-        case format.category_5: add_item.category = 5
+        case format.category_6: add_item.category = 6
         case format.button_back: 
             bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
@@ -328,7 +330,9 @@ def menu_edit_item_step1(callback):
     '''
     Предложение категории
     '''
-    msg = bot.send_message(callback.message.chat.id, 'Выберите категорию блюда', reply_markup=format.get_menu_category_keyboard())
+    msg = bot.send_message(callback.message.chat.id, 
+                           'Выберите категорию блюда', 
+                           reply_markup=format.get_menu_category_keyboard())
     bot.register_next_step_handler(msg, menu_edit_item_step2)
 
 def menu_edit_item_step2(message):
@@ -345,23 +349,27 @@ def menu_edit_item_step2(message):
         case format.category_2: cat = 2
         case format.category_3: cat = 3
         case format.category_4: cat = 4
-        case format.category_5: cat = 5
+        case format.category_6: cat = 6
         case format.button_back: 
             bot.send_message(message.chat.id, 
                      format.get_hello_admin_text(), 
                      reply_markup=format.get_hello_admin_keyboard())
         case _: 
-            bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
+            bot.send_message(message.chat.id, 
+                             'Ошибка: неизвестная категория', 
+                             reply_markup=format.get_hello_admin_keyboard())
             return
     # Проверка, что выбрана не пустая категория + вывод списка из категории
     menu = db.menu_get_list_category(cat)
     if len(menu) == 0:
-        msg = bot.send_message(message.chat.id, 'В этой категории нету блюд', reply_markup=format.get_hello_admin_keyboard())
+        msg = bot.send_message(message.chat.id, 
+                               'В этой категории нету блюд', 
+                               reply_markup=format.get_hello_admin_keyboard())
         return
 
     msg = bot.send_message(message.chat.id, 
-                    f'Выберите блюдо для редактирования:\n{format.format_menu_list_id(menu)}',
-                    reply_markup=format.get_menu_id_category_keyboard(menu)) 
+                    f'Выберите блюдо для редактирования:\n{format.format_menu_list_full(menu)}',
+                    reply_markup=format.get_menu_keyboard(menu)) 
 
     bot.register_next_step_handler(msg, menu_edit_item_step3, menu)
 
@@ -370,19 +378,33 @@ def menu_edit_item_step3(message, menu):
     Выбор блюда и предложение видимости
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 
+                         'Ошибка: введите текст', 
+                         reply_markup=format.get_hello_admin_keyboard())
         return
+    
+    if message.text == format.button_back:
+       bot.send_message(message.chat.id, 
+                         format.get_hello_admin_text(), 
+                         reply_markup=format.get_hello_admin_keyboard()) 
+       return
+    
+    id = format.get_id_from_name(menu, message.text)
     
     edit_item = None
     for item in menu:
-        if str(item.id) == message.text:
+        if item.id == id:
             edit_item = item
 
     if edit_item == None: 
-        bot.send_message(message.chat.id, 'Ошибка: укажите корректный номер', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 
+                         'Ошибка: укажите корректное название', 
+                         reply_markup=format.get_hello_admin_keyboard())
         return
     
-    msg = bot.send_message(message.chat.id, 'Укажите видимость в меню', reply_markup=format.get_menu_visibility_edit_keyobard())
+    msg = bot.send_message(message.chat.id, 
+                           'Укажите видимость в меню', 
+                           reply_markup=format.get_menu_visibility_edit_keyobard())
     bot.register_next_step_handler(msg, menu_edit_item_step34, edit_item)
 
 def menu_edit_item_step34(message, edit_item):
@@ -459,20 +481,25 @@ def menu_delete_item_step2(message):
         case format.category_2: cat = 2
         case format.category_3: cat = 3
         case format.category_4: cat = 4
-        case format.category_5: cat = 5
+        # case format.category_5: cat = 5
+        case format.category_6: cat = 6
         case _: 
-            bot.send_message(message.chat.id, 'Ошибка: неизвестная категория', reply_markup=format.get_hello_admin_keyboard())
+            bot.send_message(message.chat.id, 
+                             'Ошибка: неизвестная категория', 
+                             reply_markup=format.get_hello_admin_keyboard())
             return
 
     # Проверка, что выбрана не пустая категория + вывод списка из категории
     menu = db.menu_get_list_category(cat)
     if len(menu) == 0:
-        msg = bot.send_message(message.chat.id, 'В этой категории нету блюд', reply_markup=format.get_hello_admin_keyboard())
+        msg = bot.send_message(message.chat.id, 
+                               'В этой категории нету блюд', 
+                               reply_markup=format.get_hello_admin_keyboard())
         return
 
     msg = bot.send_message(message.chat.id, 
-                    f'Выберите блюдо для <b>удаления</b>:\n{format.format_menu_list_id(menu)}',
-                    reply_markup=format.get_menu_id_category_keyboard(menu))
+                    f'Выберите блюдо для <b>удаления</b>:\n{format.format_menu_list_full(menu)}',
+                    reply_markup=format.get_menu_keyboard(menu))
     bot.register_next_step_handler(msg, menu_delete_item_step3, menu)
 
 def menu_delete_item_step3(message, menu):
@@ -482,14 +509,24 @@ def menu_delete_item_step3(message, menu):
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
         return
+    
+    if message.text == format.button_back:
+       bot.send_message(message.chat.id, 
+                         format.get_hello_admin_text(), 
+                         reply_markup=format.get_hello_admin_keyboard()) 
+       return
 
-    food = ''
+    id = format.get_id_from_name(menu, message.text)
+
+    food = None
     for item in menu:
-        if str(item.id) == message.text:
+        if item.id == id:
             food = item
 
-    if food == '': 
-        bot.send_message(message.chat.id, 'Ошибка: укажите корректный номер', reply_markup=format.get_hello_admin_keyboard())
+    if food == None: 
+        bot.send_message(message.chat.id, 
+                         'Ошибка: укажите корректное название', 
+                         reply_markup=format.get_hello_admin_keyboard())
         return
 
     db.menu_delete_item(food.id)
