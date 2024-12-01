@@ -273,7 +273,8 @@ def menu_add_item_step2(message):
     '''
 
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст или нажмите на кнопку клавиатуры')
+        bot.register_next_step_handler(message, menu_add_item_step2)
         return
 
     add_item = db.Food()
@@ -301,11 +302,12 @@ def menu_add_item_step3(message, add_item):
     '''
 
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст')
+        bot.register_next_step_handler(message, menu_add_item_step3, add_item)
         return
     
     add_item.name = message.text
-    msg = bot.send_message(message.chat.id, 'Введите цену', reply_markup=types.ReplyKeyboardRemove())
+    msg = bot.send_message(message.chat.id, 'Введите цену (без валюты)', reply_markup=types.ReplyKeyboardRemove())
     bot.register_next_step_handler(msg, menu_add_item_step4, add_item)
 
 def menu_add_item_step4(message, add_item):
@@ -314,10 +316,12 @@ def menu_add_item_step4(message, add_item):
     '''
 
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите число')
+        bot.register_next_step_handler(message, menu_add_item_step4, add_item)
         return
     if not message.text.isdigit():
-        bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите число')
+        bot.register_next_step_handler(message, menu_add_item_step4, add_item)
         return
     
     add_item.price = message.text
@@ -340,7 +344,8 @@ def menu_edit_item_step2(message):
     Выбор категории и предложение номера
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст или нажмите на кнопку клавиатуры')
+        bot.register_next_step_handler(message, menu_edit_item_step2)
         return
     
     cat = 0
@@ -379,8 +384,8 @@ def menu_edit_item_step3(message, menu):
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 
-                         'Ошибка: введите текст', 
-                         reply_markup=format.get_hello_admin_keyboard())
+                         'Ошибка: введите текст')
+        bot.register_next_step_handler(message, menu_edit_item_step3, menu)
         return
     
     if message.text == format.button_back:
@@ -412,7 +417,8 @@ def menu_edit_item_step34(message, edit_item):
     Установка видимости и предложение нового названия
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст')
+        bot.register_next_step_handler(message, menu_edit_item_step34, edit_item)
         return
     
     match message.text:
@@ -431,7 +437,8 @@ def menu_edit_item_step4(message, edit_item):
     Установка нового названия и предложение новой цены
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст')
+        bot.register_next_step_handler(message, menu_edit_item_step4, edit_item)
         return
     
     if not message.text == 'Ок':
@@ -445,7 +452,8 @@ def menu_edit_item_step5(message, edit_item):
     Установка новых значений
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите число')
+        bot.register_next_step_handler(message, menu_edit_item_step5, edit_item)
         return
     
     if message.text == 'Ок':
@@ -472,7 +480,8 @@ def menu_delete_item_step2(message):
     Выбор категории и предложение номера
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст или нажмите на кнопку клавиатуры')
+        bot.register_next_step_handler(message, menu_delete_item_step2)
         return
     
     cat = 0
@@ -485,8 +494,8 @@ def menu_delete_item_step2(message):
         case format.category_6: cat = 6
         case _: 
             bot.send_message(message.chat.id, 
-                             'Ошибка: неизвестная категория', 
-                             reply_markup=format.get_hello_admin_keyboard())
+                             'Ошибка: неизвестная категория')
+            bot.register_next_step_handler(message, menu_delete_item_step2)
             return
 
     # Проверка, что выбрана не пустая категория + вывод списка из категории
@@ -507,7 +516,8 @@ def menu_delete_item_step3(message, menu):
     Выбор блюда и предложение нового названия
     '''
     if not message.content_type == 'text':
-        bot.send_message(message.chat.id, 'Ошибка: введите текст', reply_markup=format.get_hello_admin_keyboard())
+        bot.send_message(message.chat.id, 'Ошибка: введите текст')
+        bot.register_next_step_handler(message, menu_delete_item_step3, menu)
         return
     
     if message.text == format.button_back:
@@ -562,7 +572,7 @@ def add_admin_step1(message: types.Message) -> None:
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
-        bot.register_next_step_handler(add_admin_step1)
+        bot.register_next_step_handler(message, add_admin_step1)
         return
     
     if message.text == format.button_back:
@@ -582,7 +592,7 @@ def add_admin_step2(message: types.Message, name: str) -> None:
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 'Ошибка: неизвестная команда')
-        bot.register_next_step_handler(add_admin_step2)
+        bot.register_next_step_handler(message, add_admin_step2)
         return
 
     if message.text == format.button_back:
@@ -593,7 +603,7 @@ def add_admin_step2(message: types.Message, name: str) -> None:
     
     if not message.text.isdigit():
         bot.send_message(message.chat.id, 'Ошибка: id пользователя - целое положительно число')
-        bot.register_next_step_handler(add_admin_step2)
+        bot.register_next_step_handler(message, add_admin_step2)
         return
     
     db.add_admin(int(message.text), name)
@@ -1013,7 +1023,6 @@ def make_order_step3(message, telephone):
                                                     message.text,
                                                     telephone),
                      reply_markup=format.get_ordered_accept_keyboard(number))
-
 
 bot.infinity_polling()
 
