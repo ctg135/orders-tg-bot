@@ -729,7 +729,7 @@ def order_food_simple_step3(message, id, category):
         carts[message.chat.id][id] = count
     
     bot.send_message(message.chat.id, 'Добавлено')
-    bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
+    bot.send_message(message.chat.id, 'Что-нибудь ещё?')
     order_food_simple_step1(message, category)
     
 def order_food_complex_step1(message, category):
@@ -857,7 +857,7 @@ def order_food_complex_step4(message, menu, category, first_id, second_id):
         carts[message.chat.id][id] = count
     
     bot.send_message(message.chat.id, 'Добавлено')
-    bot.send_message(message.chat.id, 'Что-нибдуь ещё?')
+    bot.send_message(message.chat.id, 'Что-нибудь ещё?')
     order_food_complex_step1(message, category)
 
 # Секция редактирования корзины

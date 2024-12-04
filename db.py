@@ -323,9 +323,9 @@ def message_set(name: str, value: str):
     '''
     con = sqlite3.connect(DB)
     cur = con.cursor()
-    cur.execute(f'''UPDATE `message`
-                    SET text = "{value}"
-                    WHERE name = "{name}";''')
+    cur.execute('''UPDATE `message`
+                    SET text = ?
+                    WHERE name = ?;''', (value, name))
     con.commit()
 
 def get_message_hello_text() -> str:
@@ -339,4 +339,3 @@ def set_message_hello_text(value: str):
     Установка сообщения приветствия пользователя
     '''
     message_set('HELLO_TEXT', value)
-
