@@ -1,4 +1,5 @@
 import sqlite3
+import json, random
 from datetime import date, datetime
 from config import FILE_DB
 
@@ -339,3 +340,12 @@ def set_message_hello_text(value: str):
     Установка сообщения приветствия пользователя
     '''
     message_set('HELLO_TEXT', value)
+
+def get_random_sticker() -> str:
+    '''
+    Получение случайного id стикера из БД
+    '''
+    stickers = json.loads(message_get('FINISH_STICKERS'))
+    rand = random.Random(datetime.timestamp(datetime.now()))
+    sticker_id = rand.randint(0, len(stickers) - 1)
+    return stickers[sticker_id]

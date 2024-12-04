@@ -222,7 +222,7 @@ def get_callback(callback: types.CallbackQuery):
                     bot.send_message(client,
                                      format.get_order_accpeted_client_text(call[2]),
                                      reply_markup=format.get_hello_client_keyboard())
-                    bot.send_sticker(client, 'CAACAgIAAxkBAAENBLxnHRKLdtGhrw1Us1bOPSq8Ohlo_wACHwADDbbSGVMMqpEYFo4gNgQ')
+                    bot.send_sticker(client, db.get_random_sticker())
                 case 'cancel':
                     client = db.order_cancel(int(call[2]))
                     bot.send_message(orders_chat, format.get_order_canceled_chat_text(call[2]))
