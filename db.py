@@ -47,6 +47,8 @@ def check_database() -> None:
     cur.execute('''INSERT OR IGNORE INTO `message` (name, text) 
                    VALUES ('HELLO_TEXT', "👋 Здравствуйте, вас приветсвтует Пищепром!
 📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐")''')
+    cur.execute('''INSERT OR IGNORE INTO message (name, text)
+                   VALUES ("FINISH_STICKERS", '[\"CAACAgIAAxkBAAIqrGdQpFi7bZlc3GbdjBBzCTZ3msPJAAKhRgACylVhSB8JxUjYQkfyNgQ\"]')''', (''))
     
     con.commit()
 
@@ -341,7 +343,7 @@ def set_message_hello_text(value: str):
     '''
     message_set('HELLO_TEXT', value)
 
-def get_random_sticker() -> str:
+def get_sticker_random() -> str:
     '''
     Получение случайного id стикера из БД
     '''
@@ -349,3 +351,27 @@ def get_random_sticker() -> str:
     rand = random.Random(datetime.timestamp(datetime.now()))
     sticker_id = rand.randint(0, len(stickers) - 1)
     return stickers[sticker_id]
+
+def get_sticker_list() -> list:
+    '''
+    Получение списка стикеров
+    '''
+    stickers = json.loads(message_get('FINISH_STICKERS'))
+    return stickers
+
+def add_sticker(sticker_id: str) -> None:
+    '''
+    Добавление id стикера
+    '''
+    stickers = json.loads(message_get('FINISH_STICKERS'))
+    stickers.append(sticker_id)
+    message_set('FINISH_STICKERS', json.dumps(stickers))
+
+def delete_sticker(sticker_id: str) -> None:
+    '''
+    Удаление id стикера
+    '''
+    stickers = json.loads(message_get('FINISH_STICKERS'))
+    stickers.remove(sticker_id)
+    message_set('FINISH_STICKERS', json.dumps(stickers))
+    

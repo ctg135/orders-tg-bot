@@ -17,6 +17,7 @@ button_hello_text = 'Приветствие'
 button_menu_nice = 'Меню дня'
 button_menu_full = 'Полный перечень'
 button_admins = 'Администраторы'
+button_stickers = 'Список стикеров'
 button_menu_hidden = 'Скрыть'
 button_menu_visible = 'Указать'
 button_order_accept = '✅ Принять'
@@ -37,8 +38,10 @@ def get_hello_admin_keyboard() -> types.ReplyKeyboardMarkup:
     menu_full = types.KeyboardButton(text=button_menu_full)
     hello_text = types.KeyboardButton(text=button_hello_text)
     admins = types.KeyboardButton(text=button_admins)
+    stickers = types.KeyboardButton(text=button_stickers)
     result.add(menu_nice, menu_full)
     result.add(hello_text, admins)
+    result.add(stickers)
     return result
 
 def get_hello_client_keyboard() -> types.ReplyKeyboardMarkup:
@@ -299,6 +302,16 @@ def get_admin_list_edit_keyboard() -> types.InlineKeyboardMarkup:
         result.add(admin_option)
     return result
     
+def get_sticker_delete_keyboard(sticker_id: str) -> types.InlineKeyboardMarkup:
+    '''
+    Клавиатура для удаления стикера
+    '''
+    result = types.InlineKeyboardMarkup()
+    delete = types.InlineKeyboardButton(text='❌ Удалить',
+                                        callback_data=f'sticker_delete')
+    result.add(delete)
+    return result
+
 
 def get_hello_admin_text() -> str:
     '''
@@ -309,6 +322,7 @@ def get_hello_admin_text() -> str:
 <code>{button_menu_full}</code> - полное меню
 <code>{button_hello_text}</code> - редактирование приветствия бота
 <code>{button_admins}</code> - список администраторов бота
+<code>{button_stickers}</code> - стикеры при создании заказа
 '''
 
 def get_hello_client_text() -> str:
@@ -483,6 +497,15 @@ def get_admin_id() -> str:
 Чтобы его узнать, <b>целевой</b> пользователь должен написать боту <b>IDBot</b> @myidbot в личные сообщения команду <code>/getid</code>
 
 Для отмены создания нажмите на кнопку <code>{button_back}</code>'''
+
+def get_sticker_help() -> str:
+    '''
+    Текст для справки добавления и удаления стикеров
+    '''
+    return f'''Для добавления стикеров отправляйте их мне. Как закончите, напишите <b>{button_ok}</b>
+
+Для удаления нажмите на соответствующую кнопку под стикером
+    '''
 
 def format_menu_list_full(menu: db.Food) -> str:
     '''

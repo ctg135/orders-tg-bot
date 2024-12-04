@@ -131,6 +131,16 @@ def get_all_mesasge(message):
                 bot.send_message(message.chat.id, 
                                  format.get_admin_list_text(),
                                  reply_markup=format.get_admin_list_edit_keyboard())
+            case format.button_stickers:
+                stickers = db.get_sticker_list()
+                for sticker in stickers:
+                    bot.send_sticker(message.chat.id,
+                                     sticker=sticker,
+                                     reply_markup=format.get_sticker_delete_keyboard(sticker))
+                bot.send_message(message.chat.id, 
+                                 format.get_sticker_help(),
+                                 reply_markup=format.get_ok_keyboard())
+                bot.register_next_step_handler(message, add_sticker)
             case _:
             # Приветствие администратора
                 bot.send_message(message.chat.id, 
@@ -153,6 +163,9 @@ def get_callback(callback: types.CallbackQuery):
         # Удаление элемента в меню
         case 'menu_delete':
             menu_delete_item_step1(callback)
+            return
+        case 'sticker_delete':
+            delete_sticker(callback)
             return
     call = callback.data.split('_')
     match call[0]:
@@ -222,7 +235,7 @@ def get_callback(callback: types.CallbackQuery):
                     bot.send_message(client,
                                      format.get_order_accpeted_client_text(call[2]),
                                      reply_markup=format.get_hello_client_keyboard())
-                    bot.send_sticker(client, db.get_random_sticker())
+                    bot.send_sticker(client, db.get_sticker_random())
                 case 'cancel':
                     client = db.order_cancel(int(call[2]))
                     bot.send_message(orders_chat, format.get_order_canceled_chat_text(call[2]))
@@ -614,6 +627,39 @@ def add_admin_step2(message: types.Message, name: str) -> None:
                      reply_markup=format.get_hello_admin_keyboard())
     load_admins()
 
+def add_sticker(message: types.Message) -> None:
+    '''
+    Процедура добавления нового стикера
+    '''
+    if message.content_type == 'text':
+        if message.text == format.button_ok:
+            bot.send_message(message.chat.id,
+                            'Готово!',
+                            reply_markup=types.ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(),
+                     reply_markup=format.get_hello_admin_keyboard())
+            return
+    if message.content_type == 'sticker':
+        db.add_sticker(message.sticker.file_id)
+        bot.send_message(message.chat.id,
+                    'Стикер добавлен! ✅',
+                    reply_markup=format.get_ok_keyboard())
+    bot.register_next_step_handler(message, add_sticker)
+
+def delete_sticker(callback: types.CallbackQuery) -> None:
+    '''
+    Функция удаления стикеров. Если стикер остался один, он не даст этого сделать
+    '''
+    if len(db.get_sticker_list()) == 1:
+        bot.send_message(callback.message.chat.id,
+                         'Это последний стикер, его нельзя удалить')
+        return
+    bot.delete_message(callback.message.chat.id,
+                       callback.message.message_id)
+    db.delete_sticker(callback.message.sticker.file_id)
+    bot.send_message(callback.message.chat.id,
+                     'Стикер удален ❌')
 
 # Секция создания заказа
 
