@@ -48,7 +48,7 @@ def check_database() -> None:
                    VALUES ('HELLO_TEXT', "👋 Здравствуйте, вас приветсвтует Пищепром!
 📝 Прием заказов на обед до 11; доставка обедов с 13 до 14 🕐")''')
     cur.execute('''INSERT OR IGNORE INTO message (name, text)
-                   VALUES ("FINISH_STICKERS", '[\"CAACAgIAAxkBAAIqrGdQpFi7bZlc3GbdjBBzCTZ3msPJAAKhRgACylVhSB8JxUjYQkfyNgQ\"]')''', (''))
+                   VALUES ("FINISH_STICKERS", '["CAACAgIAAxkBAAIqrGdQpFi7bZlc3GbdjBBzCTZ3msPJAAKhRgACylVhSB8JxUjYQkfyNgQ"]')''', (''))
     
     con.commit()
 
@@ -167,27 +167,44 @@ def menu_get_list_category_nice(category: int) -> list:
     return result
 
 
-def menu_add_item(i: Food) -> None:
+def menu_add_item(i: Food) -> bool:
     '''
     Добавляет запись с новым блюдом
-    # TODO добавить проверку на совпадение имени
+    В случае успеха возвращает True
+    При ошибке добавления (совпадение по имени), возвращает False
     '''
     con = sqlite3.connect(DB)
     cur = con.cursor()
-    cur.execute(f'''INSERT INTO menu (category, name, price) 
-                VALUES ({i.category}, "{i.name}", {i.price})''')
-    con.commit()
+    try:
+        cur.execute(f'''INSERT INTO menu (category, name, price) 
+                    VALUES ({i.category}, "{i.name}", {i.price})''')
+    except:
+        return False
+    else:
+        con.commit()
+        return True
+    finally:
+        con.close()
 
-def menu_edit_item(id: int, new: Food) -> None:
+def menu_edit_item(id: int, new: Food) -> bool:
     '''
     Установка новых значений для поля
+    В случае успеха возвращает True
+    При ошибке изменения, возвращает False
     '''
     con = sqlite3.connect(DB)
     cur = con.cursor()
-    cur.execute(f'''UPDATE menu
-                SET name = '{new.name}', price = {new.price}, visibility = {new.visibility}
-                WHERE id = {id};''')
-    con.commit()
+    try:
+        cur.execute(f'''UPDATE menu
+                    SET name = '{new.name}', price = {new.price}, visibility = {new.visibility}
+                    WHERE id = {id};''')
+    except:
+        return False
+    else:
+        con.commit()
+        return True
+    finally:
+        con.close()
 
 def menu_delete_item(id: int) -> None:
     '''

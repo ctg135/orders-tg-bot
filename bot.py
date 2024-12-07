@@ -338,8 +338,10 @@ def menu_add_item_step4(message, add_item):
         return
     
     add_item.price = message.text
-    db.menu_add_item(add_item)
-    bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+    if db.menu_add_item(add_item):
+        bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+    else:
+        bot.send_message(message.chat.id, 'Ошибка добавления. Совпадение по именам блюд. Попробуйте добавить заново', reply_markup=format.get_hello_admin_keyboard())
 
 # Секция редактирования элемента в меню
 
@@ -473,11 +475,14 @@ def menu_edit_item_step5(message, edit_item):
         pass
     elif not message.text.isdigit():
         bot.send_message(message.chat.id, 'Ошибка: введите число', reply_markup=format.get_hello_admin_keyboard())
+        bot.register_next_step_handler(message, menu_edit_item_step5, edit_item)
         return
     else: edit_item.price = message.text
 
-    db.menu_edit_item(edit_item.id, edit_item)
-    bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+    if db.menu_edit_item(edit_item.id, edit_item):
+        bot.send_message(message.chat.id, '✅ Готово!', reply_markup=format.get_hello_admin_keyboard())
+    else:
+        bot.send_message(message.chat.id, 'Ошибка редактирования. Попробуйте отредактировать заново', reply_markup=format.get_hello_admin_keyboard())
 
 # Секция удаления элемента в меню
 
