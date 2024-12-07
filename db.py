@@ -269,14 +269,20 @@ def get_address_from_last_order(user_id: int) -> str:
 def order_add(user_id: int, telephone: str, address: str, order_list: str, date: datetime = datetime.now()) -> int:
     '''
     Добавляет запись с заказом в базу данных
+    При ошибке возвращает -1
     Возвращает номер созданного заказа
     '''
     con = sqlite3.connect(DB)
     cur = con.cursor()
-    cur.execute(f'''INSERT INTO `order` (user_id, date, telephone, address, order_list) 
-                VALUES ("{user_id}", "{date.strftime("%d.%m.%Y %H:%M:%S")}", "{telephone}", "{address}", "{order_list}")''')
+
+    try:
+        cur.execute(f'''INSERT INTO `order` (user_id, date, telephone, address, order_list) 
+                    VALUES ("{user_id}", "{date.strftime("%d.%m.%Y %H:%M:%S")}", "{telephone}", "{address}", "{order_list}")''')
+    except:
+        con.close()
+        return -1
+                    
     con.commit()
-    
     cur.execute(f'''SELECT id 
                     FROM`order` 
                     WHERE user_id = {user_id} 
