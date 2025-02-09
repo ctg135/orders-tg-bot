@@ -107,8 +107,10 @@ def get_menu_edit_keyboard() -> types.InlineKeyboardMarkup:
     result = types.InlineKeyboardMarkup()
     add = types.InlineKeyboardButton(text='➕', callback_data='menu_add')
     edit = types.InlineKeyboardButton(text='📝', callback_data='menu_edit')
+    hide = types.InlineKeyboardButton(text='🫣', callback_data='menu_hide')
     delete = types.InlineKeyboardButton(text='🗑️', callback_data='menu_delete')
-    result.add(add, edit, delete)
+    result.add(edit, hide, delete)
+    result.add(add)
     return result
 
 def get_menu_category_keyboard() -> types.ReplyKeyboardMarkup:

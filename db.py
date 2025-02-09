@@ -398,3 +398,16 @@ def delete_sticker(sticker_id: str) -> None:
     stickers.remove(sticker_id)
     message_set('FINISH_STICKERS', json.dumps(stickers))
     
+def item_toggle_visibility(id: int):
+    '''
+    Изменения отображения блюда
+    '''
+    item = get_item(id)
+    new_visibility = 0 if item.visibility else 1
+    
+    con = sqlite3.connect(DB)
+    cur = con.cursor()
+    cur.execute('''UPDATE `menu`
+                    SET visibility = ?
+                    WHERE id = ?;''', (new_visibility, id))
+    con.commit()

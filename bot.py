@@ -122,7 +122,7 @@ def get_all_mesasge(message):
                 menu = db.menu_get_list_nice()
                 if len(menu) == 0:
                     bot.send_message(message.chat.id, 
-                                     format.text_empty_menu, 
+                                     format.text_empty_menu_admin, 
                                      reply_markup=format.get_menu_add_keyboard())
                 else:
                     bot.send_message(message.chat.id, 
@@ -158,7 +158,6 @@ def get_all_mesasge(message):
 @bot.callback_query_handler(func=lambda call: True)
 def get_callback(callback: types.CallbackQuery):
     # if not check_access_callback(callback):  return
-    
     match callback.data:
         # Добавление нового блюда
         case 'menu_add':
@@ -171,6 +170,9 @@ def get_callback(callback: types.CallbackQuery):
         # Удаление элемента в меню
         case 'menu_delete':
             menu_delete_item_step1(callback)
+            return
+        case 'menu_hide':
+            menu_hide_item_step1(callback)
             return
         case 'sticker_delete':
             delete_sticker(callback)
@@ -416,7 +418,7 @@ def menu_edit_item_step2(message):
 
 def menu_edit_item_step3(message, menu):
     '''
-    Выбор блюда и предложение видимости
+    Выбор блюда и предложение нового названия
     '''
     if not message.content_type == 'text':
         bot.send_message(message.chat.id, 
@@ -442,30 +444,6 @@ def menu_edit_item_step3(message, menu):
                          format.text_error_no_name, 
                          reply_markup=format.get_hello_admin_keyboard())
         return
-    
-    msg = bot.send_message(message.chat.id, 
-                           format.text_hide, 
-                           reply_markup=format.get_menu_visibility_edit_keyobard())
-    bot.register_next_step_handler(msg, menu_edit_item_step34, edit_item)
-
-def menu_edit_item_step34(message, edit_item):
-    '''
-    Установка видимости и предложение нового названия
-    '''
-    if not message.content_type == 'text':
-        bot.send_message(message.chat.id, format.text_error_text_or_button)
-        bot.register_next_step_handler(message, menu_edit_item_step34, edit_item)
-        return
-    
-    match message.text:
-        case format.button_ok: pass
-        case format.button_menu_hidden: edit_item.visibility = 0
-        case format.button_menu_visible: edit_item.visibility = 1
-        case _: 
-            bot.send_message(message.chat.id, 
-                             format.text_error_hide_status, 
-                             reply_markup=format.get_hello_admin_keyboard())
-            return
 
     msg = bot.send_message(message.chat.id, 
                            format.text_item_new_name, 
@@ -516,6 +494,92 @@ def menu_edit_item_step5(message, edit_item):
         bot.send_message(message.chat.id, 
                          format.text_error_editing_item, 
                          reply_markup=format.get_hello_admin_keyboard())
+
+# Секция скрытия элемента в меню
+
+def menu_hide_item_step1(callback):
+    '''
+    Предложение категории
+    '''
+    msg = bot.send_message(callback.message.chat.id, 
+                           format.text_item_category, 
+                           reply_markup=format.get_menu_category_keyboard())
+    bot.register_next_step_handler(msg, menu_hide_item_step2)
+
+def menu_hide_item_step2(message):
+    '''
+    Выбор категории и предложение блюда
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 
+                         format.text_error_text_or_button)
+        bot.register_next_step_handler(message, menu_hide_item_step2)
+        return
+    
+    cat = 0
+    match message.text:
+        case format.category_1: cat = 1
+        case format.category_2: cat = 2
+        case format.category_3: cat = 3
+        case format.category_4: cat = 4
+        case format.category_6: cat = 6
+        case format.button_back: 
+            bot.send_message(message.chat.id, 
+                     format.get_hello_admin_text(), 
+                     reply_markup=format.get_hello_admin_keyboard())
+        case _: 
+            bot.send_message(message.chat.id, 
+                             format.text_error_unknown_category, 
+                             reply_markup=format.get_hello_admin_keyboard())
+            return
+    # Проверка, что выбрана не пустая категория + вывод списка из категории
+    menu = db.menu_get_list_category(cat)
+    if len(menu) == 0:
+        msg = bot.send_message(message.chat.id, 
+                               format.text_no_item_category, 
+                               reply_markup=format.get_hello_admin_keyboard())
+        return
+
+    msg = bot.send_message(message.chat.id, 
+                    f'Выберите блюдо для скрытия 🫣 или отображения:\n{format.format_menu_list_full(menu)}',
+                    reply_markup=format.get_menu_keyboard(menu)) 
+
+    bot.register_next_step_handler(msg, menu_hide_item_step3, menu)
+
+def menu_hide_item_step3(message, menu):
+    '''
+    Выбор блюда и предложение видимости
+    '''
+    if not message.content_type == 'text':
+        bot.send_message(message.chat.id, 
+                         format.text_error_only_text)
+        bot.register_next_step_handler(message, menu_hide_item_step3, menu)
+        return
+    
+    if message.text == format.button_back:
+       bot.send_message(message.chat.id, 
+                         format.get_hello_admin_text(), 
+                         reply_markup=format.get_hello_admin_keyboard()) 
+       return
+    
+    id = format.get_id_from_name(menu, message.text)
+    
+    hide_item = None
+    for item in menu:
+        if item.id == id:
+            hide_item = item
+
+    if hide_item == None: 
+        bot.send_message(message.chat.id, 
+                         format.text_error_no_name, 
+                         reply_markup=format.get_hello_admin_keyboard())
+        return
+    
+    db.item_toggle_visibility(hide_item.id)
+    msg = bot.send_message(message.chat.id, 
+                           format.text_done, 
+                           reply_markup=format.get_hello_admin_keyboard())
+
 
 # Секция удаления элемента в меню
 
