@@ -690,7 +690,7 @@ def add_sticker(message: types.Message) -> None:
     if message.content_type == 'sticker':
         db.add_sticker(message.sticker.file_id)
         bot.send_message(message.chat.id,
-                    format.text_sticker_addeds,
+                    format.text_sticker_added,
                     reply_markup=format.get_ok_keyboard())
     bot.register_next_step_handler(message, add_sticker)
 
